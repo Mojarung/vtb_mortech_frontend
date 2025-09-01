@@ -1,0 +1,199 @@
+{
+  "projectName": "Positivus Agency Website",
+  "projectType": "Single-Page Responsive Website",
+  "description": "This document outlines the design and functionality requirements for building a single-page marketing agency website based on the provided design mockups. The goal is to create a modern, clean, and engaging user experience with smooth animations and full responsiveness.",
+  "generalInstructions": {
+    "frameworkSuggestion": "React (Next.js) or a similar modern JavaScript framework is recommended for component-based architecture. Use a CSS-in-JS solution like Styled Components or a utility-first framework like Tailwind CSS for styling.",
+    "responsiveness": {
+      "target": "The website must be fully responsive and adapt seamlessly to all device sizes, from mobile phones (vertical) to desktops.",
+      "behavior": "Grids (e.g., Services, Team) should stack into a single column on mobile devices. Font sizes and spacing should adjust accordingly. Ensure navigation is mobile-friendly, possibly using a hamburger menu.",
+      "typography": "Follow the mobile-specific typography guidelines provided in the style guide."
+    },
+    "animations": {
+      "onScroll": "Implement subtle fade-in or slide-in animations for sections and elements as the user scrolls down the page. This adds a dynamic feel.",
+      "onHover": "All interactive elements (buttons, cards, links) should have clear hover states. For example, cards could slightly scale up or have a shadow effect. Buttons could change color or brightness.",
+      "transitions": "Ensure all state changes, like the accordion expanding or hover effects, are smooth with a transition duration of approximately 0.3s."
+    },
+    "assetLinks": {
+      "font": "The font used is 'Positivus'. A link is provided in the style guide image: 'You can find font here'. This should be implemented via `@font-face` or a font service.",
+      "illustrations": "Illustrations are credited to 'Igor Kapustin' and 'vectorjuice on Freepik'. All illustrations from the mockups should be exported as optimized SVGs to ensure they are crisp and lightweight."
+    }
+  },
+  "styleGuide": {
+    "colors": {
+      "primary": "#B9FF66 (Lime Green)",
+      "dark": "#191A23 (Almost Black)",
+      "light": "#F3F3F3 (Light Gray/White)"
+    },
+    "typography": {
+      "fontFamily": "'Positivus', sans-serif",
+      "desktop": {
+        "h1": "Large, bold (as per hero section)",
+        "h2": "Slightly smaller than H1",
+        "h3": "Medium size",
+        "h4": "Small-medium size",
+        "p": "Body text size"
+      },
+      "mobile": {
+        "h1": "Scaled down for mobile screens",
+        "h2": "Scaled down",
+        "h3": "Scaled down",
+        "h4": "Scaled down",
+        "p": "Body text size, ensure readability"
+      }
+    },
+    "uiElements": {
+      "buttons": "Buttons have two main styles: dark background with light text, and lime green background with dark text. They should have rounded corners and a slight hover effect.",
+      "cards": "Cards feature prominently throughout the design. They have distinctly rounded corners and a clean, consistent border style."
+    }
+  },
+  "pageStructure": [
+    {
+      "sectionName": "Header",
+      "description": "A clean, sticky navigation bar at the top of the page.",
+      "components": [
+        {
+          "name": "Logo",
+          "details": "The 'Positivus' logo on the left."
+        },
+        {
+          "name": "Navigation Links",
+          "details": "Links for 'About us', 'Services', 'Use Cases', 'Pricing', 'Blog'. These should be smooth-scroll links that navigate to the corresponding sections on the page."
+        },
+        {
+          "name": "CTA Button",
+          "details": "'Request a quote' button with an outlined style (white background, dark border)."
+        }
+      ],
+      "behavior": "The header should remain fixed at the top of the viewport as the user scrolls."
+    },
+    {
+      "sectionName": "Hero",
+      "description": "The introductory section that captures the user's attention.",
+      "components": [
+        {
+          "name": "Main Headline",
+          "details": "Large H1 text: 'Navigating the digital landscape for success'."
+        },
+        {
+          "name": "Subtext",
+          "details": "A paragraph describing the agency's services."
+        },
+        {
+          "name": "CTA Button",
+          "details": "'Book a consultation' button with a dark background."
+        },
+        {
+          "name": "Illustration",
+          "details": "A large, stylized megaphone illustration on the right side."
+        },
+        {
+          "name": "Client Logos",
+          "details": "A row of logos for social proof: amazon, dribbble, HubSpot, Notion, NETFLIX, zoom."
+        }
+      ]
+    },
+    {
+      "sectionName": "Services",
+      "description": "A grid layout showcasing the agency's key services.",
+      "layout": "A 2x3 grid on desktop, stacking to a single column on mobile.",
+      "components": [
+        {
+          "name": "Service Card",
+          "details": "Six cards, each representing a service (SEO, PPC, Social Media, Email Marketing, Content Creation, Analytics). Cards have a title, an illustration, and a 'Learn more' link. The design alternates between light and dark card backgrounds."
+        }
+      ]
+    },
+    {
+      "sectionName": "CTA Section",
+      "description": "A prominent call-to-action block.",
+      "layout": "A single large card with a light gray background.",
+      "components": [
+        {
+          "name": "Headline",
+          "details": "'Let's make things happen'."
+        },
+        {
+          "name": "Subtext",
+          "details": "A short paragraph encouraging users to get in touch."
+        },
+        {
+          "name": "CTA Button",
+          "details": "'Get your free proposal' button."
+        },
+        {
+          "name": "Illustration",
+          "details": "An abstract character illustration on the right."
+        }
+      ]
+    },
+    {
+      "sectionName": "Case Studies",
+      "description": "Showcases successful projects to build credibility.",
+      "layout": "A single dark container with three vertically divided sections.",
+      "components": [
+        {
+          "name": "Case Study Snippet",
+          "details": "Each of the three sections contains a brief description of a project's success (e.g., 'For a local restaurant...') and a 'Learn more' link."
+        }
+      ]
+    },
+    {
+      "sectionName": "Our Working Process",
+      "description": "An interactive accordion explaining the agency's methodology.",
+      "layout": "A vertically stacked list of expandable items.",
+      "functionality": {
+        "type": "Accordion",
+        "behavior": "Clicking a title (or its plus/minus icon) expands its content while collapsing any other open item. The first item ('Consultation') should be open by default. The active/open item has a lime green background."
+      },
+      "components": [
+        {
+          "name": "Accordion Item",
+          "details": "Six items, each with a number, a title (e.g., 'Consultation'), and a description paragraph that is hidden until expanded."
+        }
+      ]
+    },
+    {
+      "sectionName": "Team",
+      "description": "Introduces the key members of the agency.",
+      "layout": "A 2x3 grid of team member cards on desktop, stacking to a single column on mobile.",
+      "components": [
+        {
+          "name": "Team Member Card",
+          "details": "Each card includes a photo with a green graphic overlay, name, title, a clickable LinkedIn icon, and a short bio."
+        },
+        {
+          "name": "View All Button",
+          "details": "A 'See all team' button centered below the grid."
+        }
+      ]
+    },
+    {
+      "sectionName": "Footer",
+      "description": "The final section containing contact information, navigation, and other essential links.",
+      "layout": "A multi-column layout on a dark background.",
+      "components": [
+        {
+          "name": "Primary Info",
+          "details": "Logo and secondary navigation links ('About us', etc.)."
+        },
+        {
+          "name": "Contact Details",
+          "details": "Address, phone number, and email address."
+        },
+        {
+          "name": "Newsletter Signup",
+          "details": "An email input field and a 'Subscribe to news' button with a lime green background."
+        },
+        {
+          "name": "Social Links",
+          "details": "Icons for LinkedIn, Facebook, and Twitter."
+        },
+        {
+          "name": "Copyright",
+          "details": "Copyright text and a link to the Privacy Policy at the very bottom."
+        }
+      ]
+    }
+  ]
+}
