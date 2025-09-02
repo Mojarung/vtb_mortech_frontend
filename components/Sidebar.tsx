@@ -40,6 +40,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
   const candidateMenuItems = [
     { icon: BarChart3, label: t('dashboard'), href: '/candidate/dashboard' },
+    { icon: Package, label: 'Вакансии', href: '/candidate/vacancies' },
     { icon: Calendar, label: t('my_interviews'), href: '/candidate/interview' },
     { icon: FileText, label: t('my_applications'), href: '/candidate/applications' },
     { icon: Users, label: t('profile'), href: '/candidate/profile' },
@@ -67,23 +68,24 @@ export default function Sidebar({ userRole }: SidebarProps) {
           width: isCollapsed ? 80 : 280,
           x: isCollapsed ? -280 : 0
         }}
-        className={`fixed left-0 top-0 h-full bg-gray-900 dark:bg-gray-800 text-white z-50 flex flex-col ${
+        className={`fixed left-0 top-0 h-screen bg-gray-800 dark:bg-gray-900 text-white z-50 flex flex-col ${
           isCollapsed ? 'lg:translate-x-0 -translate-x-full' : 'translate-x-0'
-        } lg:relative lg:translate-x-0 transition-transform duration-300`}
+        } lg:relative lg:translate-x-0 transition-all duration-300 shadow-xl`}
+        style={{ minHeight: '100vh', height: '100vh' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700 dark:border-gray-600">
+        <div className="flex items-center justify-between p-6 border-b border-gray-600 dark:border-gray-700">
           <div className={`flex items-center gap-3 ${isCollapsed ? 'lg:justify-center' : ''}`}>
-            <div className="w-8 h-8 bg-primary-purple rounded flex items-center justify-center">
+            <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center">
               <span className="text-white font-bold text-sm">AI</span>
             </div>
             {!isCollapsed && (
-              <span className="text-xl font-bold">AI HR</span>
+              <span className="text-xl font-bold text-white">AI HR</span>
             )}
           </div>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="lg:hidden p-1 hover:bg-gray-700 rounded"
+            className="lg:hidden p-1 hover:bg-gray-600 dark:hover:bg-gray-700 rounded"
           >
             <X size={20} />
           </button>
@@ -99,8 +101,8 @@ export default function Sidebar({ userRole }: SidebarProps) {
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
                     isActive(item.href)
-                      ? 'bg-primary-purple text-white'
-                      : 'text-gray-300 hover:bg-gray-700 dark:hover:bg-gray-600 hover:text-white'
+                      ? 'bg-purple-600 text-white'
+                      : 'text-gray-300 dark:text-gray-400 hover:bg-gray-700 dark:hover:bg-gray-800 hover:text-white'
                   } ${isCollapsed ? 'justify-center' : ''}`}
                 >
                   <item.icon size={20} />
@@ -114,25 +116,23 @@ export default function Sidebar({ userRole }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-700 dark:border-gray-600">
-          <div className="space-y-2">
-            <button
-              onClick={() => window.location.href = '/auth/login'}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 dark:hover:bg-gray-600 hover:text-white transition-colors ${
-                isCollapsed ? 'justify-center' : ''
-              }`}
-            >
-              <LogOut size={20} />
-              {!isCollapsed && <span>{t('logout')}</span>}
-            </button>
-          </div>
+        <div className="mt-auto p-6 border-t border-gray-600 dark:border-gray-700">
+          <button
+            onClick={() => window.location.href = '/auth/login'}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 dark:text-gray-400 hover:bg-gray-700 dark:hover:bg-gray-800 hover:text-white transition-colors ${
+              isCollapsed ? 'justify-center' : ''
+            }`}
+          >
+            <LogOut size={20} />
+            {!isCollapsed && <span>{t('logout')}</span>}
+          </button>
         </div>
       </motion.div>
 
       {/* Mobile menu button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-gray-900 text-white rounded-lg"
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-gray-800 dark:bg-gray-900 text-white rounded-lg shadow-lg"
       >
         <Menu size={20} />
       </button>
