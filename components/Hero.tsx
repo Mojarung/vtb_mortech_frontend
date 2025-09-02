@@ -23,23 +23,23 @@ export default function Hero() {
             className="lg:pr-8"
           >
             <h1 className="text-4xl lg:text-6xl font-bold font-positivus mb-6 leading-tight">
-              Navigating the{' '}
+              Революция в{' '}
               <span className="relative">
-                digital
-                <span className="absolute -bottom-2 left-0 right-0 h-3 bg-primary-green -z-10"></span>
+                найме
+                <span className="absolute -bottom-2 left-0 right-0 h-3 bg-primary-purple -z-10"></span>
               </span>{' '}
-              landscape for success
+              с помощью ИИ
             </h1>
             <p className="text-lg text-gray-700 mb-8 leading-relaxed">
-              Our digital marketing agency helps businesses grow and succeed online through a range of 
-              services including SEO, PPC, social media marketing, and content creation.
+              Наш AI HR сервис помогает рекрутерам проводить интеллектуальные собеседования, 
+              автоматизируя процесс отбора кандидатов и повышая качество найма.
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="bg-dark text-white px-8 py-4 rounded-xl text-lg font-medium hover:bg-gray-800 transition-all duration-300"
             >
-              Book a consultation
+Записаться на консультацию
             </motion.button>
           </motion.div>
 
@@ -58,16 +58,16 @@ export default function Hero() {
                   className="w-full h-full max-w-md"
                 >
                   <circle cx="200" cy="200" r="150" fill="#F3F3F3" opacity="0.3" />
-                  <circle cx="200" cy="200" r="100" fill="#B9FF66" opacity="0.5" />
+                  <circle cx="200" cy="200" r="100" fill="#8B5CF6" opacity="0.5" />
                   
                   <path
                     d="M120 180 L280 180 L280 140 L320 200 L280 260 L280 220 L120 220 Z"
                     fill="#191A23"
                   />
                   
-                  <circle cx="80" cy="120" r="20" fill="#B9FF66" />
+                  <circle cx="80" cy="120" r="20" fill="#8B5CF6" />
                   <circle cx="320" cy="80" r="15" fill="#191A23" />
-                  <circle cx="350" cy="300" r="25" fill="#B9FF66" opacity="0.7" />
+                  <circle cx="350" cy="300" r="25" fill="#8B5CF6" opacity="0.7" />
                   
                   <path
                     d="M60 300 L100 280 L140 320 L180 300 L220 340 L260 320 L300 360"
@@ -78,28 +78,13 @@ export default function Hero() {
                 </svg>
               </div>
               
-              <div className="absolute top-8 right-8 w-12 h-12 bg-primary-green rounded-full animate-pulse"></div>
+              <div className="absolute top-8 right-8 w-12 h-12 bg-primary-purple rounded-full animate-pulse"></div>
               <div className="absolute bottom-16 left-8 w-8 h-8 bg-dark rounded-full animate-bounce"></div>
             </div>
           </motion.div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-16"
-        >
-          <div className="flex flex-wrap justify-center lg:justify-between items-center gap-8 opacity-60">
-            {clientLogos.map((logo) => (
-              <div key={logo.name} className="flex items-center">
-                <div className="text-2xl font-bold text-gray-400">
-                  {logo.name}
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+
       </div>
     </section>
   )

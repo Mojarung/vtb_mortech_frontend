@@ -6,46 +6,46 @@ import { ArrowRight, Search, MousePointer, Share2, Mail, FileText, BarChart3 } f
 export default function Services() {
   const services = [
     {
-      title: 'Search engine optimization',
+      title: 'Автоматическое проведение собеседований',
       icon: Search,
       bgColor: 'bg-light-gray',
       textColor: 'text-dark',
-      iconColor: 'text-primary-green'
+      iconColor: 'text-primary-purple'
     },
     {
-      title: 'Pay-per-click advertising',
+      title: 'Оценка навыков с помощью ИИ',
       icon: MousePointer,
-      bgColor: 'bg-primary-green',
+      bgColor: 'bg-primary-purple',
       textColor: 'text-dark',
       iconColor: 'text-dark'
     },
     {
-      title: 'Social Media Marketing',
+      title: 'Анализ поведения кандидатов',
       icon: Share2,
       bgColor: 'bg-dark',
       textColor: 'text-white',
-      iconColor: 'text-primary-green'
+      iconColor: 'text-primary-purple'
     },
     {
-      title: 'Email Marketing',
+      title: 'Генерация отчетов по кандидатам',
       icon: Mail,
       bgColor: 'bg-light-gray',
       textColor: 'text-dark',
-      iconColor: 'text-primary-green'
+      iconColor: 'text-primary-purple'
     },
     {
-      title: 'Content Creation',
+      title: 'Персонализация вопросов',
       icon: FileText,
-      bgColor: 'bg-primary-green',
+      bgColor: 'bg-primary-purple',
       textColor: 'text-dark',
       iconColor: 'text-dark'
     },
     {
-      title: 'Analytics and Tracking',
+      title: 'Интеграция с HR-системами',
       icon: BarChart3,
       bgColor: 'bg-dark',
       textColor: 'text-white',
-      iconColor: 'text-primary-green'
+      iconColor: 'text-primary-purple'
     }
   ]
 
@@ -60,11 +60,11 @@ export default function Services() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl lg:text-5xl font-bold font-positivus mb-4">
-            <span className="bg-primary-green px-2 py-1 rounded">Services</span>
+            <span className="bg-primary-purple px-2 py-1 rounded">Наши сервисы</span>
           </h2>
           <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-            At our digital marketing agency, we offer a range of services to 
-            help businesses grow and succeed online. These services include:
+            AI HR платформа предлагает полный спектр сервисов для 
+            автоматизации процесса найма и повышения эффективности HR-отделов:
           </p>
         </motion.div>
 
@@ -86,7 +86,7 @@ export default function Services() {
                   </h3>
                   <div className="flex items-center group-hover:translate-x-2 transition-transform duration-300">
                     <service.icon className={`${service.iconColor} mr-3`} size={24} />
-                    <span className="text-lg font-medium">Learn more</span>
+                    <span className="text-lg font-medium">Подробнее</span>
                     <ArrowRight className={`${service.iconColor} ml-2`} size={20} />
                   </div>
                 </div>

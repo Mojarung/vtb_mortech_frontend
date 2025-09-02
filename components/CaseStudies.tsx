@@ -6,13 +6,13 @@ import { ArrowRight } from 'lucide-react'
 export default function CaseStudies() {
   const caseStudies = [
     {
-      description: "For a local restaurant, we implemented a targeted PPC campaign that resulted in a 50% increase in website traffic and a 25% increase in sales.",
+      description: "Для IT-компании мы внедрили AI HR систему, которая сократила время на проведение собеседований на 60% и повысила качество отбора кандидатов.",
     },
     {
-      description: "For a B2B software company, we developed an SEO strategy that resulted in a first page ranking for key keywords and a 200% increase in organic traffic.",
+      description: "Для финансовой компании мы разработали систему автоматической оценки навыков, что позволило снизить ошибки в найме на 80%.",
     },
     {
-      description: "For a national retail chain, we created a social media marketing campaign that increased followers by 25% and generated a 20% increase in online sales.",
+      description: "Для стартапа мы создали полноценную AI платформу для рекрутинга, которая увеличила скорость найма в 3 раза.",
     }
   ]
 
@@ -27,11 +27,11 @@ export default function CaseStudies() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl lg:text-5xl font-bold font-positivus mb-4">
-            <span className="bg-primary-green px-2 py-1 rounded">Case Studies</span>
+            <span className="bg-primary-purple px-2 py-1 rounded">Кейсы</span>
           </h2>
           <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-            Explore Real-Life Examples of Our Proven Digital Marketing 
-            Success through Our Case Studies
+            Реальные примеры успешного внедрения AI HR решений 
+            для оптимизации процесса найма
           </p>
         </motion.div>
 
@@ -55,8 +55,8 @@ export default function CaseStudies() {
                 <p className="text-lg leading-relaxed mb-6">
                   {study.description}
                 </p>
-                <div className="flex items-center text-primary-green hover:text-white cursor-pointer transition-colors duration-300 group">
-                  <span className="text-lg font-medium mr-2">Learn more</span>
+                <div className="flex items-center text-primary-purple hover:text-white cursor-pointer transition-colors duration-300 group">
+                  <span className="text-lg font-medium mr-2">Подробнее</span>
                   <ArrowRight 
                     size={20} 
                     className="group-hover:translate-x-1 transition-transform duration-300" 

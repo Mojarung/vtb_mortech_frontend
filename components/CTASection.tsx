@@ -16,18 +16,18 @@ export default function CTASection() {
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div>
               <h2 className="text-3xl lg:text-5xl font-bold font-positivus mb-6">
-                Let's make things happen
+                Начнем работать вместе
               </h2>
               <p className="text-lg text-gray-700 mb-8 leading-relaxed">
-                Contact us today to learn more about how our digital marketing services 
-                can help your business grow and succeed online.
+                Свяжитесь с нами сегодня, чтобы узнать, как AI HR сервис 
+                может помочь вашей компании оптимизировать процесс найма.
               </p>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="bg-dark text-white px-8 py-4 rounded-xl text-lg font-medium hover:bg-gray-800 transition-all duration-300"
               >
-                Get your free proposal
+Получить бесплатное предложение
               </motion.button>
             </div>
 
@@ -52,21 +52,21 @@ export default function CTASection() {
                   
                   <path
                     d="M80 80 Q150 40 220 80 Q250 150 220 220 Q150 260 80 220 Q50 150 80 80"
-                    stroke="#B9FF66"
+                    stroke="#8B5CF6"
                     strokeWidth="3"
                     fill="none"
                     strokeDasharray="5,5"
                   />
                   
-                  <circle cx="250" cy="100" r="15" fill="#B9FF66" />
-                  <polygon points="50,250 70,230 90,250 110,230" fill="#B9FF66" />
+                  <circle cx="250" cy="100" r="15" fill="#8B5CF6" />
+                  <polygon points="50,250 70,230 90,250 110,230" fill="#8B5CF6" />
                   <circle cx="50" cy="100" r="10" fill="#191A23" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="absolute top-8 right-8 w-16 h-16 bg-primary-green rounded-full opacity-20 animate-pulse"></div>
+          <div className="absolute top-8 right-8 w-16 h-16 bg-primary-purple rounded-full opacity-20 animate-pulse"></div>
           <div className="absolute bottom-8 left-8 w-12 h-12 bg-dark rounded-full opacity-10 animate-bounce"></div>
         </motion.div>
       </div>

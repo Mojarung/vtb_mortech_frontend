@@ -4,19 +4,19 @@ import Services from '../components/Services'
 import CTASection from '../components/CTASection'
 import CaseStudies from '../components/CaseStudies'
 import WorkingProcess from '../components/WorkingProcess'
-import Team from '../components/Team'
 import Footer from '../components/Footer'
+import ThemeLanguageSwitcher from '../components/ThemeLanguageSwitcher'
 
 export default function Home() {
   return (
     <main className="min-h-screen">
+      <ThemeLanguageSwitcher />
       <Header />
       <Hero />
       <Services />
       <CTASection />
       <CaseStudies />
       <WorkingProcess />
-      <Team />
       <Footer />
     </main>
   )

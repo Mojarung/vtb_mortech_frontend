@@ -10,33 +10,33 @@ export default function WorkingProcess() {
   const processSteps = [
     {
       number: '01',
-      title: 'Consultation',
-      description: 'During the initial consultation, we will discuss your business goals and objectives, target audience, and current marketing efforts. This will allow us to understand your needs and tailor our services to best fit your requirements.'
+      title: 'Консультация',
+      description: 'На первоначальной консультации мы обсудим цели вашего бизнеса, текущие HR-процессы и потребности. Это позволит нам понять ваши требования и адаптировать наши сервисы.'
     },
     {
       number: '02',
-      title: 'Research and Strategy Development',
-      description: 'We conduct thorough market research and competitor analysis to develop a comprehensive digital marketing strategy tailored to your business needs and target audience.'
+      title: 'Анализ и разработка стратегии',
+      description: 'Мы проводим тщательный анализ ваших HR-процессов и разрабатываем комплексную стратегию автоматизации найма с помощью AI.'
     },
     {
       number: '03',
-      title: 'Implementation',
-      description: 'Our team executes the agreed-upon strategy with precision, utilizing the latest tools and techniques to ensure maximum effectiveness and ROI for your campaigns.'
+      title: 'Внедрение',
+      description: 'Наша команда реализует согласованную стратегию с прецизионностью, используя новейшие AI-технологии и инструменты для максимальной эффективности.'
     },
     {
       number: '04',
-      title: 'Monitoring and Optimization',
-      description: 'We continuously monitor campaign performance and make data-driven adjustments to optimize results and ensure your marketing goals are achieved.'
+      title: 'Мониторинг и оптимизация',
+      description: 'Мы непрерывно отслеживаем эффективность системы и вносим корректировки на основе данных для оптимизации результатов и достижения целей.'
     },
     {
       number: '05',
-      title: 'Reporting and Communication',
-      description: 'Regular reporting keeps you informed of campaign progress, results, and insights. We maintain open communication to ensure transparency and alignment with your business objectives.'
+      title: 'Отчётность и коммуникация',
+      description: 'Регулярная отчётность держит вас в курсе прогресса, результатов и аналитики. Мы поддерживаем открытое общение для обеспечения прозрачности.'
     },
     {
       number: '06',
-      title: 'Continual Improvement',
-      description: 'We believe in continuous improvement and regularly review and refine our strategies to stay ahead of industry trends and maximize your competitive advantage.'
+      title: 'Непрерывное улучшение',
+      description: 'Мы верим в непрерывное совершенствование и регулярно проверяем и совершенствуем наши стратегии, чтобы опережать тренды отрасли.'
     }
   ]
 
@@ -51,10 +51,10 @@ export default function WorkingProcess() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl lg:text-5xl font-bold font-positivus mb-4">
-            <span className="bg-primary-green px-2 py-1 rounded">Our Working Process</span>
+            <span className="bg-primary-purple px-2 py-1 rounded">Наш рабочий процесс</span>
           </h2>
           <p className="text-lg text-gray-700">
-            Step-by-Step Guide to Achieving Your Business Goals
+            Пошаговое руководство по достижению ваших HR-целей
           </p>
         </motion.div>
 
@@ -67,7 +67,7 @@ export default function WorkingProcess() {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               viewport={{ once: true }}
               className={`border border-dark rounded-3xl overflow-hidden ${
-                openItem === index ? 'bg-primary-green' : 'bg-light-gray'
+                openItem === index ? 'bg-primary-purple' : 'bg-light-gray'
               } transition-colors duration-300`}
             >
               <button
