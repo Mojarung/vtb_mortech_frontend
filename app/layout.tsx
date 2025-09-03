@@ -2,8 +2,17 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Positivus - Digital Marketing Agency',
-  description: 'Navigating the digital landscape for success',
+  title: 'MOJARUNG AI HR',
+  description: '',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/favicon.png',
+  },
 }
 
 export default function RootLayout({

@@ -79,7 +79,6 @@ export default function Hero() {
               </div>
               
               <div className="absolute top-8 right-8 w-12 h-12 bg-primary-purple rounded-full animate-pulse"></div>
-              <div className="absolute bottom-16 left-8 w-8 h-8 bg-dark rounded-full animate-bounce"></div>
             </div>
           </motion.div>
         </div>

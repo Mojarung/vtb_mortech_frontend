@@ -17,8 +17,8 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           <div className="flex-shrink-0">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-dark rounded mr-2 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">⬡</span>
+              <div className="w-10 h-10 mr-2 bg-black rounded-lg flex items-center justify-center">
+                <img src="/favicon.svg" alt="AI HR Logo" className="w-8 h-8 object-contain brightness-0 invert"/>
               </div>
               <span className="text-xl font-bold font-positivus">AI HR</span>
             </div>
