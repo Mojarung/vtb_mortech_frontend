@@ -6,18 +6,21 @@ import CaseStudies from '../components/CaseStudies'
 import WorkingProcess from '../components/WorkingProcess'
 import Footer from '../components/Footer'
 import ThemeLanguageSwitcher from '../components/ThemeLanguageSwitcher'
+import HomeLayout from '../components/HomeLayout'
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
-      <ThemeLanguageSwitcher />
-      <Header />
-      <Hero />
-      <Services />
-      <CTASection />
-      <CaseStudies />
-      <WorkingProcess />
-      <Footer />
-    </main>
+    <HomeLayout>
+      <main className="min-h-screen">
+        <ThemeLanguageSwitcher />
+        <Header />
+        <Hero />
+        <Services />
+        <CTASection />
+        <CaseStudies />
+        <WorkingProcess />
+        <Footer />
+      </main>
+    </HomeLayout>
   )
 }
