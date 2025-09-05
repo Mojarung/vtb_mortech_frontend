@@ -58,12 +58,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string) => {
     try {
       setLoading(true);
+      console.log('Starting login process...');
+      
       await apiClient.login({ username, password });
+      console.log('Login successful, getting user data...');
+      
+      // Небольшая задержка, чтобы куки успели установиться
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const userData = await apiClient.getCurrentUser();
+      console.log('User data received:', userData);
       setUser(userData);
       
       // Перенаправляем на соответствующий dashboard
       if (typeof window !== 'undefined') {
+        console.log('Redirecting to dashboard for role:', userData.role);
         if (userData.role === 'hr') {
           window.location.href = '/hr/dashboard';
         } else {
@@ -88,8 +97,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       await apiClient.register(userData);
-      // После регистрации автоматически логинимсяывы
+      // После регистрации автоматически логинимся
       await apiClient.login({ username: userData.username, password: userData.password });
+      
+      // Небольшая задержка, чтобы куки успели установиться
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const currentUser = await apiClient.getCurrentUser();
       setUser(currentUser);
       

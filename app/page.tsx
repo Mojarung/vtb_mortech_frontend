@@ -15,17 +15,6 @@ import HomeLayout from '../components/HomeLayout'
 export default function Home() {
   const { user, loading } = useAuth()
 
-  useEffect(() => {
-    // Если пользователь аутентифицирован, перенаправляем на соответствующий dashboard
-    if (!loading && user) {
-      if (user.role === 'hr') {
-        window.location.href = '/hr/dashboard'
-      } else {
-        window.location.href = '/candidate/dashboard'
-      }
-    }
-  }, [user, loading])
-
   // Показываем загрузку пока проверяем аутентификацию
   if (loading) {
     return (
@@ -35,8 +24,13 @@ export default function Home() {
     )
   }
 
-  // Если пользователь аутентифицирован, не показываем главную страницу
+  // Если пользователь аутентифицирован, перенаправляем на соответствующий dashboard
   if (user) {
+    if (user.role === 'hr') {
+      window.location.href = '/hr/dashboard'
+    } else {
+      window.location.href = '/candidate/dashboard'
+    }
     return null
   }
 
