@@ -47,6 +47,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = await apiClient.getCurrentUser();
         console.log('✅ AuthContext: User authenticated successfully:', userData);
         setUser(userData);
+        
+        // Автоматически перенаправляем авторизованного пользователя
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          // Если пользователь на странице входа/регистрации, перенаправляем на dashboard
+          if (currentPath.startsWith('/auth/')) {
+            console.log('🔄 AuthContext: Auto-redirecting authenticated user from auth page');
+            // Используем setTimeout чтобы избежать проблем с React
+            setTimeout(() => {
+              if (userData.role === 'hr') {
+                window.location.href = '/hr/dashboard';
+              } else {
+                window.location.href = '/candidate/dashboard';
+              }
+            }, 100);
+          }
+        }
       } catch (error) {
         console.log('❌ AuthContext: User not authenticated:', error);
         console.log('❌ AuthContext: Error details:', {
@@ -63,7 +80,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     checkAuth();
-  }, []);
+  }, []); // Убираем зависимость, чтобы избежать дублирования
 
   const login = async (username: string, password: string) => {
     try {
