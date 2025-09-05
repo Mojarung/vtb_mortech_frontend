@@ -2,15 +2,53 @@
 
 import { motion } from 'framer-motion'
 import { Users, Package, TrendingUp, Clock, ArrowUp, ArrowDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { ProtectedRoute } from '../../../components/ProtectedRoute'
+import { apiClient } from '../../../lib/api'
 
 export default function HRDashboard() {
-  const stats = [
+  const [stats, setStats] = useState({
+    totalCandidates: 0,
+    totalInterviews: 0,
+    successfulHires: 0,
+    pending: 0
+  })
+  const [interviews, setInterviews] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [statsData, interviewsData] = await Promise.all([
+          apiClient.getHRStats(),
+          apiClient.getHRInterviews()
+        ])
+        setStats(statsData)
+        setInterviews(interviewsData)
+      } catch (error) {
+        console.error('Error fetching HR data:', error)
+        // Fallback to empty data if API fails
+        setStats({
+          totalCandidates: 0,
+          totalInterviews: 0,
+          successfulHires: 0,
+          pending: 0
+        })
+        setInterviews([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+  const statsData = [
     {
       title: 'Всего кандидатов',
-      value: '40,689',
+      value: stats.totalCandidates.toString(),
       change: '+8.5%',
       changeType: 'up',
       icon: Users,
@@ -18,7 +56,7 @@ export default function HRDashboard() {
     },
     {
       title: 'Всего интервью',
-      value: '10,293',
+      value: stats.totalInterviews.toString(),
       change: '+1.3%',
       changeType: 'up',
       icon: Package,
@@ -26,7 +64,7 @@ export default function HRDashboard() {
     },
     {
       title: 'Успешных найма',
-      value: '89,000',
+      value: stats.successfulHires.toString(),
       change: '-4.3%',
       changeType: 'down',
       icon: TrendingUp,
@@ -34,23 +72,11 @@ export default function HRDashboard() {
     },
     {
       title: 'Ожидающих',
-      value: '2,040',
+      value: stats.pending.toString(),
       change: '+1.8%',
       changeType: 'up',
       icon: Clock,
       color: 'bg-orange-500'
-    }
-  ]
-
-  const interviews = [
-    {
-      id: 1,
-      candidate: 'Apple Watch',
-      position: 'Frontend Developer',
-      date: '12.09.2019 - 12:53 PM',
-      score: 423,
-      amount: '$34,295',
-      status: 'Принят'
     }
   ]
 
@@ -75,7 +101,7 @@ export default function HRDashboard() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
+          {statsData.map((stat, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -137,7 +163,13 @@ export default function HRDashboard() {
               Последние интервью
             </h2>
             <div className="space-y-4">
-              {interviews.map((interview) => (
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-gray-500 mt-2">Загрузка интервью...</p>
+                </div>
+              ) : interviews.length > 0 ? (
+                interviews.map((interview: any) => (
                 <div key={interview.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
@@ -162,7 +194,13 @@ export default function HRDashboard() {
                     </span>
                   </div>
                 </div>
-              ))}
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Users size={48} className="mx-auto mb-4 text-gray-300" />
+                  <p>Нет интервью</p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

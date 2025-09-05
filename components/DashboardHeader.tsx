@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Search, Bell, Globe, Sun, Moon, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../hooks/useLanguage'
+import { useAuth } from '../contexts/AuthContext'
 
 interface DashboardHeaderProps {
   title: string
@@ -16,6 +17,7 @@ export default function DashboardHeader({ title, userRole }: DashboardHeaderProp
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { language, changeLanguage, t } = useLanguage()
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     const savedTheme = document.cookie
@@ -204,15 +206,15 @@ export default function DashboardHeader({ title, userRole }: DashboardHeaderProp
             >
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">
-                  {userRole === 'hr' ? 'HR' : 'C'}
+                  {user?.username?.charAt(0).toUpperCase() || (userRole === 'hr' ? 'HR' : 'C')}
                 </span>
               </div>
               <div className="text-left hidden sm:block">
                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                  {userRole === 'hr' ? 'Moni Roy' : 'John Doe'}
+                  {user?.full_name || user?.username || (userRole === 'hr' ? 'HR Manager' : 'Candidate')}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  {userRole === 'hr' ? 'Admin' : 'Candidate'}
+                  {user?.role === 'hr' ? 'HR Manager' : 'Candidate'}
                 </div>
               </div>
               <ChevronDown size={16} className="text-gray-400" />
@@ -238,7 +240,7 @@ export default function DashboardHeader({ title, userRole }: DashboardHeaderProp
                     </button>
                     <hr className="my-2 border-gray-200 dark:border-gray-600" />
                     <button 
-                      onClick={() => window.location.href = '/auth/login'}
+                      onClick={logout}
                       className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                     >
                       {t('logout')}

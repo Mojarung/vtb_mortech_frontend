@@ -104,6 +104,23 @@ class ApiClient {
       console.warn('Logout request failed:', error);
     }
   }
+
+  // Методы для получения данных dashboard
+  async getCandidateStats(): Promise<any> {
+    return this.request<any>('/candidate/stats');
+  }
+
+  async getCandidateInterviews(): Promise<any> {
+    return this.request<any>('/candidate/interviews');
+  }
+
+  async getHRStats(): Promise<any> {
+    return this.request<any>('/hr/stats');
+  }
+
+  async getHRInterviews(): Promise<any> {
+    return this.request<any>('/hr/interviews');
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

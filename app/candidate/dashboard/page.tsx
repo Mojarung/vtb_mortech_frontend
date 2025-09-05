@@ -2,81 +2,77 @@
 
 import { motion } from 'framer-motion'
 import { Calendar, Clock, CheckCircle, AlertCircle, Play, FileText } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { ProtectedRoute } from '../../../components/ProtectedRoute'
+import { apiClient } from '../../../lib/api'
 
 export default function CandidateDashboard() {
-  const upcomingInterviews = [
-    {
-      id: 1,
-      company: 'TechCorp',
-      position: 'Frontend Developer',
-      date: '2024-01-20',
-      time: '14:00',
-      type: 'Техническое интервью',
-      interviewer: 'Алексей Смирнов',
-      duration: '60 мин',
-      status: 'scheduled'
-    },
-    {
-      id: 2,
-      company: 'StartupXYZ',
-      position: 'React Developer',
-      date: '2024-01-22',
-      time: '10:30',
-      type: 'HR интервью',
-      interviewer: 'Мария Петрова',
-      duration: '45 мин',
-      status: 'scheduled'
-    }
-  ]
+  const [stats, setStats] = useState({
+    totalInterviews: 0,
+    completedInterviews: 0,
+    scheduledInterviews: 0,
+    averageScore: 0
+  })
+  const [interviews, setInterviews] = useState({
+    upcoming: [],
+    completed: []
+  })
+  const [loading, setLoading] = useState(true)
 
-  const completedInterviews = [
-    {
-      id: 3,
-      company: 'DevStudio',
-      position: 'Full Stack Developer',
-      date: '2024-01-15',
-      score: 85,
-      feedback: 'Отличные технические навыки, хорошее понимание архитектуры',
-      status: 'completed',
-      result: 'Прошел на следующий этап'
-    },
-    {
-      id: 4,
-      company: 'WebAgency',
-      position: 'Frontend Developer',
-      date: '2024-01-12',
-      score: 72,
-      feedback: 'Хорошие базовые знания, нужно подтянуть алгоритмы',
-      status: 'completed',
-      result: 'Отклонено'
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [statsData, interviewsData] = await Promise.all([
+          apiClient.getCandidateStats(),
+          apiClient.getCandidateInterviews()
+        ])
+        setStats(statsData)
+        setInterviews(interviewsData)
+      } catch (error) {
+        console.error('Error fetching candidate data:', error)
+        // Fallback to empty data if API fails
+        setStats({
+          totalInterviews: 0,
+          completedInterviews: 0,
+          scheduledInterviews: 0,
+          averageScore: 0
+        })
+        setInterviews({
+          upcoming: [],
+          completed: []
+        })
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
 
-  const stats = [
+    fetchData()
+  }, [])
+  const statsData = [
     {
       title: 'Всего интервью',
-      value: '12',
+      value: stats.totalInterviews.toString(),
       icon: Calendar,
       color: 'bg-blue-500'
     },
     {
       title: 'Завершенных',
-      value: '8',
+      value: stats.completedInterviews.toString(),
       icon: CheckCircle,
       color: 'bg-green-500'
     },
     {
       title: 'Запланированных',
-      value: '4',
+      value: stats.scheduledInterviews.toString(),
       icon: Clock,
       color: 'bg-yellow-500'
     },
     {
       title: 'Средний балл',
-      value: '78',
+      value: stats.averageScore.toString(),
       icon: FileText,
       color: 'bg-purple-500'
     }
@@ -103,7 +99,7 @@ export default function CandidateDashboard() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
+          {statsData.map((stat, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -137,7 +133,13 @@ export default function CandidateDashboard() {
               Предстоящие интервью
             </h2>
             <div className="space-y-4">
-              {upcomingInterviews.map((interview, index) => (
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-gray-500 mt-2">Загрузка интервью...</p>
+                </div>
+              ) : interviews.upcoming.length > 0 ? (
+                interviews.upcoming.map((interview: any, index: number) => (
                 <motion.div
                   key={interview.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -176,7 +178,13 @@ export default function CandidateDashboard() {
                     </button>
                   </div>
                 </motion.div>
-              ))}
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar size={48} className="mx-auto mb-4 text-gray-300" />
+                  <p>Нет предстоящих интервью</p>
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -190,7 +198,13 @@ export default function CandidateDashboard() {
               История интервью
             </h2>
             <div className="space-y-4">
-              {completedInterviews.map((interview, index) => (
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-gray-500 mt-2">Загрузка истории...</p>
+                </div>
+              ) : interviews.completed.length > 0 ? (
+                interviews.completed.map((interview: any, index: number) => (
                 <motion.div
                   key={interview.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -230,7 +244,13 @@ export default function CandidateDashboard() {
                     <span className="font-medium">Обратная связь:</span> {interview.feedback}
                   </p>
                 </motion.div>
-              ))}
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <CheckCircle size={48} className="mx-auto mb-4 text-gray-300" />
+                  <p>Нет завершенных интервью</p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
