@@ -79,9 +79,15 @@ class ApiClient {
   }
 
   async logout(): Promise<void> {
-    // Поскольку мы используем HttpOnly куки, logout происходит на клиенте
-    // Просто очищаем локальное состояние
-    return Promise.resolve();
+    // Делаем запрос на сервер для удаления HttpOnly куки
+    try {
+      await this.request<void>('/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      // Даже если запрос не удался, продолжаем с очисткой локального состояния
+      console.warn('Logout request failed:', error);
+    }
   }
 }
 

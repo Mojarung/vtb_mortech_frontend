@@ -7,9 +7,14 @@ export function middleware(request: NextRequest) {
   // Проверяем, есть ли токен в куки
   const token = request.cookies.get('access_token')
   
-  // Если пользователь на странице аутентификации и у него есть токен
-  if ((pathname.startsWith('/auth/login') || pathname.startsWith('/auth/register')) && token) {
-    // Не перенаправляем, пусть AuthContext сам обработает
+  // Если пользователь на странице аутентификации
+  if (pathname.startsWith('/auth/login') || pathname.startsWith('/auth/register')) {
+    // Если есть токен, перенаправляем на соответствующий dashboard
+    if (token) {
+      // В middleware мы не можем проверить валидность токена, 
+      // поэтому просто перенаправляем и пусть AuthContext проверит
+      return NextResponse.redirect(new URL('/candidate/dashboard', request.url))
+    }
     return NextResponse.next()
   }
   

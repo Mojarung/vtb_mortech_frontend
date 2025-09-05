@@ -44,9 +44,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const userData = await apiClient.getCurrentUser();
         setUser(userData);
+        console.log('User authenticated:', userData);
       } catch (error) {
-        console.log('User not authenticated');
+        console.log('User not authenticated:', error);
         setUser(null);
+        // HttpOnly cookies нельзя очистить из JavaScript
+        // Очистка произойдет автоматически при logout или истечении срока
       } finally {
         setLoading(false);
       }
@@ -63,8 +66,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await apiClient.login({ username, password });
       console.log('Login successful, getting user data...');
       
-      // Небольшая задержка, чтобы куки успели установиться
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Задержка для установки HttpOnly cookies
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       const userData = await apiClient.getCurrentUser();
       console.log('User data received:', userData);
@@ -100,8 +103,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // После регистрации автоматически логинимся
       await apiClient.login({ username: userData.username, password: userData.password });
       
-      // Небольшая задержка, чтобы куки успели установиться
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Задержка для установки HttpOnly cookies
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       const currentUser = await apiClient.getCurrentUser();
       setUser(currentUser);
@@ -122,9 +125,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    apiClient.logout();
+  const logout = async () => {
+    try {
+      setUser(null);
+      await apiClient.logout();
+      // Перенаправляем на главную страницу после logout
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Даже если logout не удался, очищаем локальное состояние
+      setUser(null);
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+    }
   };
 
   const value: AuthContextType = {
