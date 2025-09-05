@@ -7,6 +7,11 @@ export function middleware(request: NextRequest) {
   // Проверяем, есть ли токен в куки
   const token = request.cookies.get('access_token')
   
+  // Разрешаем доступ к главной странице и другим публичным страницам
+  if (pathname === '/' || pathname.startsWith('/public/') || pathname.startsWith('/_next/') || pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+  
   // Если пользователь на странице аутентификации
   if (pathname.startsWith('/auth/login') || pathname.startsWith('/auth/register')) {
     // Если есть токен, перенаправляем на соответствующий dashboard

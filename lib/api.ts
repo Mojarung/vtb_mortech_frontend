@@ -41,6 +41,9 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
+    console.log('🌐 API Client: Making request to:', url);
+    console.log('🌐 API Client: Options:', options);
+    
     const config: RequestInit = {
       ...options,
       headers: {
@@ -50,14 +53,26 @@ class ApiClient {
       credentials: 'include', // Важно для отправки куки
     };
 
+    console.log('🌐 API Client: Final config:', config);
+
     const response = await fetch(url, config);
+    
+    console.log('🌐 API Client: Response status:', response.status);
+    console.log('🌐 API Client: Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('❌ API Client: Request failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData
+      });
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('✅ API Client: Request successful:', data);
+    return data;
   }
 
   async login(credentials: LoginRequest): Promise<TokenResponse> {

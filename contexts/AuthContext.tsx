@@ -41,16 +41,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Проверяем аутентификацию при загрузке приложения
   useEffect(() => {
     const checkAuth = async () => {
+      console.log('🔍 AuthContext: Starting auth check...');
       try {
+        console.log('🔍 AuthContext: Calling getCurrentUser...');
         const userData = await apiClient.getCurrentUser();
+        console.log('✅ AuthContext: User authenticated successfully:', userData);
         setUser(userData);
-        console.log('User authenticated:', userData);
       } catch (error) {
-        console.log('User not authenticated:', error);
+        console.log('❌ AuthContext: User not authenticated:', error);
+        console.log('❌ AuthContext: Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
         setUser(null);
         // HttpOnly cookies нельзя очистить из JavaScript
         // Очистка произойдет автоматически при logout или истечении срока
       } finally {
+        console.log('🔍 AuthContext: Setting loading to false');
         setLoading(false);
       }
     };
@@ -61,21 +68,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string) => {
     try {
       setLoading(true);
-      console.log('Starting login process...');
+      console.log('🚀 AuthContext: Starting login process...');
+      console.log('🚀 AuthContext: Username:', username);
       
-      await apiClient.login({ username, password });
-      console.log('Login successful, getting user data...');
+      console.log('🚀 AuthContext: Calling apiClient.login...');
+      const loginResponse = await apiClient.login({ username, password });
+      console.log('✅ AuthContext: Login successful, response:', loginResponse);
       
+      console.log('⏳ AuthContext: Waiting for cookies to be set...');
       // Задержка для установки HttpOnly cookies
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      console.log('🔍 AuthContext: Calling getCurrentUser...');
       const userData = await apiClient.getCurrentUser();
-      console.log('User data received:', userData);
+      console.log('✅ AuthContext: User data received:', userData);
       setUser(userData);
       
       // Перенаправляем на соответствующий dashboard
       if (typeof window !== 'undefined') {
-        console.log('Redirecting to dashboard for role:', userData.role);
+        console.log('🔄 AuthContext: Redirecting to dashboard for role:', userData.role);
         if (userData.role === 'hr') {
           window.location.href = '/hr/dashboard';
         } else {
@@ -83,9 +94,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('❌ AuthContext: Login failed:', error);
+      console.error('❌ AuthContext: Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       throw error;
     } finally {
+      console.log('🔍 AuthContext: Setting loading to false');
       setLoading(false);
     }
   };
