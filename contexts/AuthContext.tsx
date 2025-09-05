@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       await apiClient.register(userData);
-      // После регистрации автоматически логинимся
+      // После регистрации автоматически логинимсяывы
       await apiClient.login({ username: userData.username, password: userData.password });
       const currentUser = await apiClient.getCurrentUser();
       setUser(currentUser);
