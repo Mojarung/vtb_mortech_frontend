@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Calendar, Clock, CheckCircle, AlertCircle, Play, FileText } from 'lucide-react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
+import { ProtectedRoute } from '../../../components/ProtectedRoute'
 
 export default function CandidateDashboard() {
   const upcomingInterviews = [
@@ -82,11 +83,12 @@ export default function CandidateDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
-      <Sidebar userRole="candidate" />
-      <div className="flex-1 flex flex-col">
-        <DashboardHeader title="Dashboard" userRole="candidate" />
-        <div className="p-6">
+    <ProtectedRoute requiredRole="user">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+        <Sidebar userRole="candidate" />
+        <div className="flex-1 flex flex-col">
+          <DashboardHeader title="Dashboard" userRole="candidate" />
+          <div className="p-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -270,5 +272,6 @@ export default function CandidateDashboard() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

@@ -1,21 +1,37 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, User } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<'hr' | 'candidate'>('candidate')
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   })
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const { login } = useAuth()
+  const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Login attempt:', { ...formData, role: selectedRole })
+    setError('')
+    setIsLoading(true)
+
+    try {
+      await login(formData.username, formData.password)
+      // После успешного логина пользователь будет перенаправлен в AuthContext
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Ошибка входа')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -39,73 +55,27 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Выбор роли */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Войти как:
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <motion.button
-                type="button"
-                onClick={() => setSelectedRole('candidate')}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`p-4 rounded-2xl border-2 transition-all duration-300 backdrop-blur-sm ${
-                  selectedRole === 'candidate'
-                    ? 'border-primary-purple bg-primary-purple/20 text-primary-purple shadow-lg shadow-primary-purple/20'
-                    : 'border-gray-300/50 dark:border-gray-600/50 text-gray-700 dark:text-gray-300 hover:border-primary-purple/50 hover:bg-primary-purple/5'
-                }`}
-              >
-                <div className="text-center">
-                  <motion.div
-                    className="text-2xl mb-2"
-                    animate={selectedRole === 'candidate' ? { scale: [1, 1.1, 1] } : {}}
-                    transition={{ duration: 0.3 }}
-                  >
-                    👤
-                  </motion.div>
-                  <div className="text-sm font-medium">Кандидат</div>
-                </div>
-              </motion.button>
-              <motion.button
-                type="button"
-                onClick={() => setSelectedRole('hr')}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`p-4 rounded-2xl border-2 transition-all duration-300 backdrop-blur-sm ${
-                  selectedRole === 'hr'
-                    ? 'border-primary-purple bg-primary-purple/20 text-primary-purple shadow-lg shadow-primary-purple/20'
-                    : 'border-gray-300/50 dark:border-gray-600/50 text-gray-700 dark:text-gray-300 hover:border-primary-purple/50 hover:bg-primary-purple/5'
-                }`}
-              >
-                <div className="text-center">
-                  <motion.div
-                    className="text-2xl mb-2"
-                    animate={selectedRole === 'hr' ? { scale: [1, 1.1, 1] } : {}}
-                    transition={{ duration: 0.3 }}
-                  >
-                    💼
-                  </motion.div>
-                  <div className="text-sm font-medium">HR</div>
-                </div>
-              </motion.button>
+          {/* Показываем ошибку если есть */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
             </div>
-          </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email
+                Имя пользователя
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-colors"
-                  placeholder="your@email.com"
+                  placeholder="username"
                 />
               </div>
             </div>
@@ -153,18 +123,25 @@ export default function LoginPage() {
             </div>
 
             <motion.button
-              whileHover={{ scale: 1.02, boxShadow: "0 10px 25px rgba(139, 92, 246, 0.3)" }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: isLoading ? 1 : 1.02, boxShadow: isLoading ? "none" : "0 10px 25px rgba(139, 92, 246, 0.3)" }}
+              whileTap={{ scale: isLoading ? 1 : 0.98 }}
               type="submit"
-              className="w-full bg-gradient-to-r from-primary-purple to-purple-600 text-white py-4 px-6 rounded-2xl font-medium hover:from-purple-600 hover:to-primary-purple transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-primary-purple/25 relative overflow-hidden group"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-primary-purple to-purple-600 text-white py-4 px-6 rounded-2xl font-medium hover:from-purple-600 hover:to-primary-purple transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-primary-purple/25 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="relative z-10">Войти</span>
-              <motion.div
-                whileHover={{ x: 2 }}
-                transition={{ type: "spring", stiffness: 400 }}
-              >
-                <ArrowRight size={20} />
-              </motion.div>
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                <>
+                  <span className="relative z-10">Войти</span>
+                  <motion.div
+                    whileHover={{ x: 2 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                  >
+                    <ArrowRight size={20} />
+                  </motion.div>
+                </>
+              )}
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             </motion.button>
           </form>

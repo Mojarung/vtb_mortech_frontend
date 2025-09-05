@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Users, Package, TrendingUp, Clock, ArrowUp, ArrowDown } from 'lucide-react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
+import { ProtectedRoute } from '../../../components/ProtectedRoute'
 
 export default function HRDashboard() {
   const stats = [
@@ -54,11 +55,12 @@ export default function HRDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
-      <Sidebar userRole="hr" />
-      <div className="flex-1 flex flex-col">
-        <DashboardHeader title="Dashboard" userRole="hr" />
-        <div className="p-6">
+    <ProtectedRoute requiredRole="hr">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+        <Sidebar userRole="hr" />
+        <div className="flex-1 flex flex-col">
+          <DashboardHeader title="Dashboard" userRole="hr" />
+          <div className="p-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -167,5 +169,6 @@ export default function HRDashboard() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export const metadata: Metadata = {
   title: 'MOJARUNG AI HR',
@@ -22,7 +23,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" className="dark">
-      <body className="dark:bg-gray-900 dark:text-white">{children}</body>
+      <body className="dark:bg-gray-900 dark:text-white">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   )
 }
