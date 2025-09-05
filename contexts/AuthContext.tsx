@@ -71,6 +71,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🚀 AuthContext: Starting login process...');
       console.log('🚀 AuthContext: Username:', username);
       
+      // Проверяем, не авторизован ли уже пользователь
+      if (user) {
+        console.log('⚠️ AuthContext: User already authenticated, redirecting...');
+        if (typeof window !== 'undefined') {
+          if (user.role === 'hr') {
+            window.location.href = '/hr/dashboard';
+          } else {
+            window.location.href = '/candidate/dashboard';
+          }
+        }
+        return;
+      }
+      
       console.log('🚀 AuthContext: Calling apiClient.login...');
       const loginResponse = await apiClient.login({ username, password });
       console.log('✅ AuthContext: Login successful, response:', loginResponse);

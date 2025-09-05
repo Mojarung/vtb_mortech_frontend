@@ -14,11 +14,10 @@ export function middleware(request: NextRequest) {
   
   // Если пользователь на странице аутентификации
   if (pathname.startsWith('/auth/login') || pathname.startsWith('/auth/register')) {
-    // Если есть токен, перенаправляем на соответствующий dashboard
+    // Если есть токен, перенаправляем на главную страницу
+    // AuthContext сам определит, куда перенаправить пользователя
     if (token) {
-      // В middleware мы не можем проверить валидность токена, 
-      // поэтому просто перенаправляем и пусть AuthContext проверит
-      return NextResponse.redirect(new URL('/candidate/dashboard', request.url))
+      return NextResponse.redirect(new URL('/', request.url))
     }
     return NextResponse.next()
   }
