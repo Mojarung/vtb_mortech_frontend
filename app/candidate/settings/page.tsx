@@ -1,24 +1,94 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { User, Bell, Shield, Globe, Palette, Eye } from 'lucide-react'
-import { useState } from 'react'
+import { User, Bell, Shield, Globe, Palette, Eye, Save } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
+import { apiClient } from '../../../lib/api'
+import { useAuth } from '../../../contexts/AuthContext'
 
 export default function CandidateSettings() {
   const [activeTab, setActiveTab] = useState('profile')
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const { user } = useAuth()
+  
+  const [profile, setProfile] = useState({
+    preferredPosition: 'Неизвестно',
+    minSalary: '',
+    maxSalary: '',
+    relocation: 'Неизвестно',
+    employmentTypes: ['Полная занятость']
+  })
+  
   const [notifications, setNotifications] = useState({
     interviews: true,
     applications: true,
     messages: false,
     email: true
   })
+  
   const [privacy, setPrivacy] = useState({
     profileVisible: true,
     contactVisible: false,
     experienceVisible: true
   })
+
+  const [password, setPassword] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+
+  useEffect(() => {
+    // Загружаем данные профиля при монтировании компонента
+    if (user) {
+      setProfile(prev => ({
+        ...prev,
+        preferredPosition: user.preferred_position || 'Неизвестно',
+        minSalary: user.min_salary?.toString() || '',
+        maxSalary: user.max_salary?.toString() || '',
+        relocation: user.relocation || 'Неизвестно',
+        employmentTypes: user.employment_types || ['Полная занятость']
+      }))
+    }
+  }, [user])
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true)
+      await apiClient.updateProfile(profile)
+      alert('Профиль успешно обновлен!')
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      alert('Ошибка при обновлении профиля')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (password.newPassword !== password.confirmPassword) {
+      alert('Пароли не совпадают')
+      return
+    }
+    
+    try {
+      setSaving(true)
+      await apiClient.changePassword({
+        oldPassword: password.oldPassword,
+        newPassword: password.newPassword
+      })
+      alert('Пароль успешно изменен!')
+      setPassword({ oldPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (error) {
+      console.error('Error changing password:', error)
+      alert('Ошибка при изменении пароля')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const tabs = [
     { id: 'profile', label: 'Профиль', icon: User },
@@ -90,7 +160,8 @@ export default function CandidateSettings() {
                       </label>
                       <input
                         type="text"
-                        defaultValue="Frontend Developer"
+                        value={profile.preferredPosition}
+                        onChange={(e) => setProfile(prev => ({ ...prev, preferredPosition: e.target.value }))}
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
@@ -102,13 +173,15 @@ export default function CandidateSettings() {
                         <input
                           type="number"
                           placeholder="От"
-                          defaultValue="150000"
+                          value={profile.minSalary}
+                          onChange={(e) => setProfile(prev => ({ ...prev, minSalary: e.target.value }))}
                           className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                         <input
                           type="number"
                           placeholder="До"
-                          defaultValue="200000"
+                          value={profile.maxSalary}
+                          onChange={(e) => setProfile(prev => ({ ...prev, maxSalary: e.target.value }))}
                           className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </div>
@@ -117,11 +190,16 @@ export default function CandidateSettings() {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Готовность к переезду
                       </label>
-                      <select className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        <option>Не готов</option>
-                        <option>Готов в пределах города</option>
-                        <option>Готов к переезду по стране</option>
-                        <option>Готов к переезду за границу</option>
+                      <select 
+                        value={profile.relocation}
+                        onChange={(e) => setProfile(prev => ({ ...prev, relocation: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="Неизвестно">Неизвестно</option>
+                        <option value="Не готов">Не готов</option>
+                        <option value="Готов в пределах города">Готов в пределах города</option>
+                        <option value="Готов к переезду по стране">Готов к переезду по стране</option>
+                        <option value="Готов к переезду за границу">Готов к переезду за границу</option>
                       </select>
                     </div>
                     <div>
@@ -133,13 +211,36 @@ export default function CandidateSettings() {
                           <label key={type} className="flex items-center">
                             <input
                               type="checkbox"
-                              defaultChecked={type === 'Полная занятость'}
+                              checked={profile.employmentTypes.includes(type)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setProfile(prev => ({ 
+                                    ...prev, 
+                                    employmentTypes: [...prev.employmentTypes, type] 
+                                  }))
+                                } else {
+                                  setProfile(prev => ({ 
+                                    ...prev, 
+                                    employmentTypes: prev.employmentTypes.filter(t => t !== type) 
+                                  }))
+                                }
+                              }}
                               className="w-4 h-4 text-primary-purple bg-gray-100 border-gray-300 rounded focus:ring-primary-purple focus:ring-2"
                             />
                             <span className="ml-2 text-gray-700 dark:text-gray-300">{type}</span>
                           </label>
                         ))}
                       </div>
+                    </div>
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-6 py-3 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                      >
+                        <Save size={20} />
+                        {saving ? 'Сохранение...' : 'Сохранить изменения'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -269,20 +370,30 @@ export default function CandidateSettings() {
                         <input
                           type="password"
                           placeholder="Текущий пароль"
+                          value={password.oldPassword}
+                          onChange={(e) => setPassword(prev => ({ ...prev, oldPassword: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                         <input
                           type="password"
                           placeholder="Новый пароль"
+                          value={password.newPassword}
+                          onChange={(e) => setPassword(prev => ({ ...prev, newPassword: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                         <input
                           type="password"
                           placeholder="Подтвердить новый пароль"
+                          value={password.confirmPassword}
+                          onChange={(e) => setPassword(prev => ({ ...prev, confirmPassword: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
-                        <button className="px-6 py-3 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors">
-                          Обновить пароль
+                        <button 
+                          onClick={handleChangePassword}
+                          disabled={saving}
+                          className="px-6 py-3 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                        >
+                          {saving ? 'Обновление...' : 'Обновить пароль'}
                         </button>
                       </div>
                     </div>

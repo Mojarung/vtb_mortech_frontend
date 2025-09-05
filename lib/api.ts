@@ -121,6 +121,54 @@ class ApiClient {
   async getHRInterviews(): Promise<any> {
     return this.request<any>('/hr/interviews');
   }
+
+  // Методы для вакансий
+  async getVacancies(): Promise<any> {
+    return this.request<any>('/vacancies');
+  }
+
+  async getVacancy(id: number): Promise<any> {
+    return this.request<any>(`/vacancies/${id}`);
+  }
+
+  async applyToVacancy(vacancyId: number): Promise<any> {
+    return this.request<any>(`/vacancies/${vacancyId}/apply`, {
+      method: 'POST',
+    });
+  }
+
+  // Методы для заявок
+  async getApplications(): Promise<any> {
+    return this.request<any>('/applications');
+  }
+
+  async getApplication(id: number): Promise<any> {
+    return this.request<any>(`/applications/${id}`);
+  }
+
+  // Методы для кандидатов (HR)
+  async getCandidates(): Promise<any> {
+    return this.request<any>('/candidates');
+  }
+
+  async getCandidate(id: number): Promise<any> {
+    return this.request<any>(`/candidates/${id}`);
+  }
+
+  // Методы для настроек пользователя
+  async updateProfile(data: any): Promise<any> {
+    return this.request<any>('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async changePassword(data: { oldPassword: string; newPassword: string }): Promise<any> {
+    return this.request<any>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

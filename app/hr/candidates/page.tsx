@@ -2,15 +2,36 @@
 
 import { motion } from 'framer-motion'
 import { Search, Filter, Calendar, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
+import { apiClient } from '../../../lib/api'
 
 export default function HRCandidates() {
   const [showFilters, setShowFilters] = useState(false)
   const [selectedDate, setSelectedDate] = useState('')
+  const [candidates, setCandidates] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const candidates = [
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        setLoading(true)
+        const data = await apiClient.getCandidates()
+        setCandidates(data)
+      } catch (error) {
+        console.error('Error fetching candidates:', error)
+        // Fallback to empty array if API fails
+        setCandidates([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCandidates()
+  }, [])
+
+  const mockCandidates = [
     {
       id: '00001',
       name: 'Кристина Брукс',
@@ -171,7 +192,17 @@ export default function HRCandidates() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {candidates.map((candidate, index) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                        <p className="text-gray-500">Загрузка кандидатов...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : candidates.length > 0 ? (
+                  candidates.map((candidate, index) => (
                   <motion.tr
                     key={candidate.id}
                     initial={{ opacity: 0, x: -20 }}
@@ -223,7 +254,19 @@ export default function HRCandidates() {
                       </div>
                     </td>
                   </motion.tr>
-                ))}
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                          <Search className="text-gray-400" size={24} />
+                        </div>
+                        <p className="text-gray-500">Нет кандидатов</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

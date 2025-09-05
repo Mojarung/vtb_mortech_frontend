@@ -2,14 +2,35 @@
 
 import { motion } from 'framer-motion'
 import { Building, Calendar, Clock, Eye, MessageSquare } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
+import { apiClient } from '../../../lib/api'
 
 export default function CandidateApplications() {
   const [filter, setFilter] = useState('all')
+  const [applications, setApplications] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const applications = [
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true)
+        const data = await apiClient.getApplications()
+        setApplications(data)
+      } catch (error) {
+        console.error('Error fetching applications:', error)
+        // Fallback to empty array if API fails
+        setApplications([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchApplications()
+  }, [])
+
+  const mockApplications = [
     {
       id: 1,
       company: 'TechCorp',
@@ -152,7 +173,13 @@ export default function CandidateApplications() {
 
           {/* Applications List */}
           <div className="space-y-4">
-            {filteredApplications.map((application, index) => (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-500">Загрузка заявок...</p>
+              </div>
+            ) : (
+              filteredApplications.map((application, index) => (
               <motion.div
                 key={application.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -208,7 +235,8 @@ export default function CandidateApplications() {
                   </div>
                 </div>
               </motion.div>
-            ))}
+              ))
+            )}
           </div>
 
           {filteredApplications.length === 0 && (

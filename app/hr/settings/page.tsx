@@ -1,18 +1,85 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { User, Bell, Shield, Globe, Palette, Database } from 'lucide-react'
-import { useState } from 'react'
+import { User, Bell, Shield, Globe, Palette, Database, Save } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
+import { apiClient } from '../../../lib/api'
+import { useAuth } from '../../../contexts/AuthContext'
 
 export default function HRSettings() {
   const [activeTab, setActiveTab] = useState('profile')
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const { user } = useAuth()
+  
+  const [profile, setProfile] = useState({
+    firstName: 'Неизвестно',
+    lastName: 'Неизвестно',
+    email: 'Неизвестно',
+    position: 'Неизвестно'
+  })
+  
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
     sms: true
   })
+
+  const [password, setPassword] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+
+  useEffect(() => {
+    // Загружаем данные профиля при монтировании компонента
+    if (user) {
+      setProfile(prev => ({
+        ...prev,
+        firstName: user.first_name || 'Неизвестно',
+        lastName: user.last_name || 'Неизвестно',
+        email: user.email || 'Неизвестно',
+        position: user.position || 'Неизвестно'
+      }))
+    }
+  }, [user])
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true)
+      await apiClient.updateProfile(profile)
+      alert('Профиль успешно обновлен!')
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      alert('Ошибка при обновлении профиля')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (password.newPassword !== password.confirmPassword) {
+      alert('Пароли не совпадают')
+      return
+    }
+    
+    try {
+      setSaving(true)
+      await apiClient.changePassword({
+        oldPassword: password.oldPassword,
+        newPassword: password.newPassword
+      })
+      alert('Пароль успешно изменен!')
+      setPassword({ oldPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (error) {
+      console.error('Error changing password:', error)
+      alert('Ошибка при изменении пароля')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const tabs = [
     { id: 'profile', label: 'Профиль', icon: User },
@@ -95,7 +162,8 @@ export default function HRSettings() {
                         </label>
                         <input
                           type="text"
-                          defaultValue="Мария"
+                          value={profile.firstName}
+                          onChange={(e) => setProfile(prev => ({ ...prev, firstName: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </div>
@@ -105,7 +173,8 @@ export default function HRSettings() {
                         </label>
                         <input
                           type="text"
-                          defaultValue="Иванова"
+                          value={profile.lastName}
+                          onChange={(e) => setProfile(prev => ({ ...prev, lastName: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </div>
@@ -116,7 +185,8 @@ export default function HRSettings() {
                       </label>
                       <input
                         type="email"
-                        defaultValue="maria.ivanova@company.com"
+                        value={profile.email}
+                        onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
@@ -126,12 +196,18 @@ export default function HRSettings() {
                       </label>
                       <input
                         type="text"
-                        defaultValue="HR-менеджер"
+                        value={profile.position}
+                        onChange={(e) => setProfile(prev => ({ ...prev, position: e.target.value }))}
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
-                    <button className="px-6 py-3 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors">
-                      Сохранить изменения
+                    <button 
+                      onClick={handleSaveProfile}
+                      disabled={saving}
+                      className="flex items-center gap-2 px-6 py-3 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                    >
+                      <Save size={20} />
+                      {saving ? 'Сохранение...' : 'Сохранить изменения'}
                     </button>
                   </div>
                 </div>
@@ -209,6 +285,8 @@ export default function HRSettings() {
                           </label>
                           <input
                             type="password"
+                            value={password.oldPassword}
+                            onChange={(e) => setPassword(prev => ({ ...prev, oldPassword: e.target.value }))}
                             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           />
                         </div>
@@ -218,6 +296,8 @@ export default function HRSettings() {
                           </label>
                           <input
                             type="password"
+                            value={password.newPassword}
+                            onChange={(e) => setPassword(prev => ({ ...prev, newPassword: e.target.value }))}
                             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           />
                         </div>
@@ -227,11 +307,17 @@ export default function HRSettings() {
                           </label>
                           <input
                             type="password"
+                            value={password.confirmPassword}
+                            onChange={(e) => setPassword(prev => ({ ...prev, confirmPassword: e.target.value }))}
                             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           />
                         </div>
-                        <button className="px-6 py-3 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors">
-                          Обновить пароль
+                        <button 
+                          onClick={handleChangePassword}
+                          disabled={saving}
+                          className="px-6 py-3 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                        >
+                          {saving ? 'Обновление...' : 'Обновить пароль'}
                         </button>
                       </div>
                     </div>

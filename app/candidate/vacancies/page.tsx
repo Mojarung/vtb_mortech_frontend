@@ -2,9 +2,10 @@
 
 import { motion } from 'framer-motion'
 import { Search, Filter, MapPin, Clock, DollarSign, Users, Star, Bookmark, BookmarkCheck } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
+import { apiClient } from '../../../lib/api'
 
 export default function CandidateVacancies() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -17,8 +18,28 @@ export default function CandidateVacancies() {
   })
   const [showFilters, setShowFilters] = useState(false)
   const [savedVacancies, setSavedVacancies] = useState<number[]>([])
+  const [vacancies, setVacancies] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const vacancies = [
+  useEffect(() => {
+    const fetchVacancies = async () => {
+      try {
+        setLoading(true)
+        const data = await apiClient.getVacancies()
+        setVacancies(data)
+      } catch (error) {
+        console.error('Error fetching vacancies:', error)
+        // Fallback to empty array if API fails
+        setVacancies([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchVacancies()
+  }, [])
+
+  const mockVacancies = [
     {
       id: 1,
       title: 'Frontend Developer',
@@ -152,8 +173,14 @@ export default function CandidateVacancies() {
     )
   }
 
-  const handleApply = (vacancyId: number) => {
-    alert(`Заявка на вакансию ${vacancyId} отправлена!`)
+  const handleApply = async (vacancyId: number) => {
+    try {
+      await apiClient.applyToVacancy(vacancyId)
+      alert(`Заявка на вакансию отправлена!`)
+    } catch (error) {
+      console.error('Error applying to vacancy:', error)
+      alert('Ошибка при отправке заявки. Попробуйте позже.')
+    }
   }
 
   return (
@@ -262,7 +289,13 @@ export default function CandidateVacancies() {
           </div>
 
           <div className="space-y-6">
-            {filteredVacancies.map((vacancy, index) => (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-500">Загрузка вакансий...</p>
+              </div>
+            ) : (
+              filteredVacancies.map((vacancy, index) => (
               <motion.div
                 key={vacancy.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -365,7 +398,8 @@ export default function CandidateVacancies() {
                   </div>
                 </div>
               </motion.div>
-            ))}
+              ))
+            )}
           </div>
 
           {filteredVacancies.length === 0 && (
