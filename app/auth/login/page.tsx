@@ -19,11 +19,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-purple to-blue-600 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-purple via-purple-500 to-pink-500 flex items-center justify-center p-4">
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
@@ -43,35 +44,51 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Войти как:
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
+            <div className="grid grid-cols-2 gap-4">
+              <motion.button
                 type="button"
                 onClick={() => setSelectedRole('candidate')}
-                className={`p-3 rounded-lg border-2 transition-all ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`p-4 rounded-2xl border-2 transition-all duration-300 backdrop-blur-sm ${
                   selectedRole === 'candidate'
-                    ? 'border-primary-purple bg-primary-purple bg-opacity-10 text-primary-purple'
-                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-primary-purple'
+                    ? 'border-primary-purple bg-primary-purple/20 text-primary-purple shadow-lg shadow-primary-purple/20'
+                    : 'border-gray-300/50 dark:border-gray-600/50 text-gray-700 dark:text-gray-300 hover:border-primary-purple/50 hover:bg-primary-purple/5'
                 }`}
               >
                 <div className="text-center">
-                  <div className="text-lg mb-1">👤</div>
+                  <motion.div
+                    className="text-2xl mb-2"
+                    animate={selectedRole === 'candidate' ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 0.3 }}
+                  >
+                    👤
+                  </motion.div>
                   <div className="text-sm font-medium">Кандидат</div>
                 </div>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 type="button"
                 onClick={() => setSelectedRole('hr')}
-                className={`p-3 rounded-lg border-2 transition-all ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`p-4 rounded-2xl border-2 transition-all duration-300 backdrop-blur-sm ${
                   selectedRole === 'hr'
-                    ? 'border-primary-purple bg-primary-purple bg-opacity-10 text-primary-purple'
-                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-primary-purple'
+                    ? 'border-primary-purple bg-primary-purple/20 text-primary-purple shadow-lg shadow-primary-purple/20'
+                    : 'border-gray-300/50 dark:border-gray-600/50 text-gray-700 dark:text-gray-300 hover:border-primary-purple/50 hover:bg-primary-purple/5'
                 }`}
               >
                 <div className="text-center">
-                  <div className="text-lg mb-1">💼</div>
+                  <motion.div
+                    className="text-2xl mb-2"
+                    animate={selectedRole === 'hr' ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 0.3 }}
+                  >
+                    💼
+                  </motion.div>
                   <div className="text-sm font-medium">HR</div>
                 </div>
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -136,13 +153,19 @@ export default function LoginPage() {
             </div>
 
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, boxShadow: "0 10px 25px rgba(139, 92, 246, 0.3)" }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full bg-primary-purple text-white py-3 px-4 rounded-lg font-medium hover:bg-opacity-90 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-primary-purple to-purple-600 text-white py-4 px-6 rounded-2xl font-medium hover:from-purple-600 hover:to-primary-purple transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-primary-purple/25 relative overflow-hidden group"
             >
-              Войти
-              <ArrowRight size={20} />
+              <span className="relative z-10">Войти</span>
+              <motion.div
+                whileHover={{ x: 2 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <ArrowRight size={20} />
+              </motion.div>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             </motion.button>
           </form>
 

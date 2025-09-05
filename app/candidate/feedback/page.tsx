@@ -7,7 +7,7 @@ import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 
 export default function CandidateFeedback() {
-  const [selectedFeedback, setSelectedFeedback] = useState('latest')
+  const [selectedFeedback, setSelectedFeedback] = useState<string | number>('latest')
 
   const feedbackData = [
     {

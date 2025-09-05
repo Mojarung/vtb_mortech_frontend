@@ -39,36 +39,13 @@ export default function CTASection() {
                   viewBox="0 0 300 300"
                   className="w-full h-full max-w-sm"
                 >
-                  <circle cx="150" cy="150" r="80" fill="#191A23" />
-                  <circle cx="130" cy="130" r="8" fill="white" />
-                  <circle cx="170" cy="130" r="8" fill="white" />
-                  <path
-                    d="M120 180 Q150 200 180 180"
-                    stroke="white"
-                    strokeWidth="4"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                  
-                  <path
-                    d="M80 80 Q150 40 220 80 Q250 150 220 220 Q150 260 80 220 Q50 150 80 80"
-                    stroke="#8B5CF6"
-                    strokeWidth="3"
-                    fill="none"
-                    strokeDasharray="5,5"
-                  />
-                  
-                  <circle cx="250" cy="100" r="15" fill="#8B5CF6" />
-                  <polygon points="50,250 70,230 90,250 110,230" fill="#8B5CF6" />
-                  <circle cx="50" cy="100" r="10" fill="#191A23" />
+                  <circle cx="150" cy="150" r="150" fill="#191A23" />
+                  <path d="M6.00001 21V15.3426C6.00001 15.1158 5.96145 14.8908 5.88599 14.6769L3.35382 7.50248C3.15169 6.92978 3.40765 6.29618 3.95086 6.02457C4.5347 5.73265 5.24482 5.95902 5.552 6.53498L9.00001 13M18 21V15.3426C18 15.1158 18.0386 14.8908 18.114 14.6769L20.6462 7.50248C20.8483 6.92978 20.5924 6.29618 20.0491 6.02457C19.4653 5.73265 18.7552 5.95902 18.448 6.53498L15 13M16 6.5C16 8.70914 14.2091 10.5 12 10.5C9.79087 10.5 8.00001 8.70914 8.00001 6.5C8.00001 4.29086 9.79087 2.5 12 2.5C14.2091 2.5 16 4.29086 16 6.5Z" stroke="white" stroke-linecap="round" stroke-width="2" transform="translate(30, 30) scale(10)"/>
                 </svg>
               </div>
             </div>
           </div>
-
-          <div className="absolute top-8 right-8 w-16 h-16 bg-primary-purple rounded-full opacity-20 animate-pulse"></div>
-          <div className="absolute bottom-8 left-8 w-12 h-12 bg-dark rounded-full opacity-10 animate-bounce"></div>
-        </motion.div>
+</motion.div>
       </div>
     </section>
   )
