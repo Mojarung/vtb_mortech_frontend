@@ -43,9 +43,23 @@ export default function CandidateProfile() {
 
   useEffect(() => {
     if (user) {
+      // Автоматическое разделение full_name если нет отдельных полей
+      let firstName = user.first_name || '';
+      let lastName = user.last_name || '';
+      
+      if (!firstName && !lastName && user.full_name) {
+        const nameParts = user.full_name.trim().split(' ');
+        if (nameParts.length >= 1) {
+          firstName = nameParts[0];
+        }
+        if (nameParts.length >= 2) {
+          lastName = nameParts[1];
+        }
+      }
+      
       setProfile({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
+        first_name: firstName,
+        last_name: lastName,
         phone: user.phone || '',
         birth_date: user.birth_date || '',
         location: user.location || '',
@@ -177,7 +191,23 @@ export default function CandidateProfile() {
                   <div className="relative inline-block">
                     <div className="w-24 h-24 bg-primary-purple rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-white text-2xl font-bold">
-                        {profile.firstName[0]}{profile.lastName[0]}
+                        {(() => {
+                          const firstName = profile.first_name || user?.first_name;
+                          const lastName = profile.last_name || user?.last_name;
+                          const fullName = user?.full_name;
+                          
+                          if (firstName && lastName) {
+                            return firstName[0] + lastName[0];
+                          } else if (fullName) {
+                            const nameParts = fullName.trim().split(' ');
+                            if (nameParts.length >= 2) {
+                              return nameParts[0][0] + nameParts[1][0];
+                            } else if (nameParts.length === 1) {
+                              return nameParts[0][0] + nameParts[0][0];
+                            }
+                          }
+                          return 'U';
+                        })()}
                       </span>
                     </div>
                     {isEditing && (
@@ -208,7 +238,18 @@ export default function CandidateProfile() {
                   ) : (
                     <>
                       <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {profile.first_name || user?.first_name || ''} {profile.last_name || user?.last_name || ''}
+                        {(() => {
+                          const firstName = profile.first_name || user?.first_name;
+                          const lastName = profile.last_name || user?.last_name;
+                          const fullName = user?.full_name;
+                          
+                          if (firstName && lastName) {
+                            return `${firstName} ${lastName}`;
+                          } else if (fullName) {
+                            return fullName;
+                          }
+                          return 'Пользователь';
+                        })()}
                       </h2>
                       <p className="text-primary-purple font-medium">{user?.email}</p>
                     </>
