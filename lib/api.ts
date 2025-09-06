@@ -172,7 +172,7 @@ class ApiClient {
 
   // Методы для вакансий
   async getVacancies(): Promise<any> {
-    return this.request<any>('/vacancies');
+    return this.request<any>('/vacancies/formatted');
   }
 
   async getVacancy(id: number): Promise<any> {
