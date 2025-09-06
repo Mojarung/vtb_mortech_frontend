@@ -30,7 +30,8 @@ export default function HRVacancies() {
     salary_to: '',
     location: '',
     employment_type: '',
-    experience_level: ''
+    experience_level: '',
+    benefits: ''
   })
 
   useEffect(() => {
@@ -95,7 +96,8 @@ export default function HRVacancies() {
         salary_to: '',
         location: '',
         employment_type: '',
-        experience_level: ''
+        experience_level: '',
+        benefits: ''
       })
       setShowCreateForm(false)
       
@@ -216,6 +218,19 @@ export default function HRVacancies() {
                     onChange={(e) => setNewVacancy({...newVacancy, requirements: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Требования к кандидату (через запятую)..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Условия работы
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={newVacancy.benefits}
+                    onChange={(e) => setNewVacancy({...newVacancy, benefits: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Условия работы (через запятую): ДМС, Обучение, Гибкий график..."
                   />
                 </div>
 

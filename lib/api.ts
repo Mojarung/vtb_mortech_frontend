@@ -1,3 +1,4 @@
+// API Configuration
 const API_BASE_URL = 'https://mojarung-vtb-mortech-backend-b77e.twc1.net';
 
 export interface User {
@@ -185,6 +186,23 @@ class ApiClient {
     });
   }
 
+  async applyToVacancyWithFile(vacancyId: number, formData: FormData): Promise<any> {
+    const url = `${this.baseURL}/applications/apply/${vacancyId}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
   async createVacancy(vacancyData: any): Promise<any> {
     return this.request<any>('/vacancies', {
       method: 'POST',
@@ -207,7 +225,7 @@ class ApiClient {
 
   // Методы для заявок
   async getApplications(): Promise<any> {
-    return this.request<any>('/applications');
+    return this.request<any>('/applications/my-applications');
   }
 
   async getApplication(id: number): Promise<any> {
@@ -216,7 +234,7 @@ class ApiClient {
 
   // Методы для кандидатов (HR)
   async getCandidates(): Promise<any> {
-    return this.request<any>('/candidates');
+    return this.request<any>('/analytics/candidates');
   }
 
   async getCandidate(id: number): Promise<any> {

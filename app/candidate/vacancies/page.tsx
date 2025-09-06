@@ -174,13 +174,27 @@ export default function CandidateVacancies() {
   }
 
   const handleApply = async (vacancyId: number) => {
-    try {
-      await apiClient.applyToVacancy(vacancyId)
-      alert(`Заявка на вакансию отправлена!`)
-    } catch (error) {
-      console.error('Error applying to vacancy:', error)
-      alert('Ошибка при отправке заявки. Попробуйте позже.')
+    // Создаем input для выбора файла
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.pdf,.doc,.docx'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('cover_letter', 'Заявка на вакансию')
+
+      try {
+        await apiClient.applyToVacancyWithFile(vacancyId, formData)
+        alert('Заявка на вакансию отправлена!')
+      } catch (error) {
+        console.error('Error applying to vacancy:', error)
+        alert('Ошибка при отправке заявки. Попробуйте позже.')
+      }
     }
+    input.click()
   }
 
   return (
@@ -284,7 +298,8 @@ export default function CandidateVacancies() {
             <select className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
               <option>Сортировать по дате</option>
               <option>Сортировать по зарплате</option>
-              <option>Сортировать по рейтингу</option>
+              <option>Сортировать по названию</option>
+              <option>Сортировать по компании</option>
             </select>
           </div>
 
@@ -350,7 +365,7 @@ export default function CandidateVacancies() {
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Требования:</h4>
                   <div className="flex flex-wrap gap-2">
-                    {vacancy.requirements.map((req, idx) => (
+                    {vacancy.requirements.map((req: string, idx: number) => (
                       <span
                         key={idx}
                         className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs"
@@ -364,7 +379,7 @@ export default function CandidateVacancies() {
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Условия:</h4>
                   <div className="flex flex-wrap gap-2">
-                    {vacancy.benefits.map((benefit, idx) => (
+                    {vacancy.benefits.map((benefit: string, idx: number) => (
                       <span
                         key={idx}
                         className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs"

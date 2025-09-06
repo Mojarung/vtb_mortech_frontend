@@ -65,18 +65,18 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
       {/* Sidebar */}
       <motion.div
-        initial={false}
-        animate={{ 
-          width: isCollapsed ? 80 : 280,
-          x: isCollapsed ? -280 : 0
-        }}
-        className={`fixed left-0 top-0 h-screen bg-gray-800 dark:bg-gray-900 text-white z-50 flex flex-col ${
-          isCollapsed ? 'lg:translate-x-0 -translate-x-full' : 'translate-x-0'
-        } lg:relative lg:translate-x-0 transition-all duration-300 shadow-xl`}
-        style={{ minHeight: '100vh', height: '100vh' }}
-      >
+  initial={false}
+  animate={{ 
+    width: isCollapsed ? 80 : 280,
+    x: isCollapsed ? -280 : 0
+  }}
+  className={`fixed left-0 top-0 h-screen bg-gray-800 dark:bg-gray-900 text-white z-50 flex flex-col ${
+    isCollapsed ? 'lg:translate-x-0 -translate-x-full' : 'translate-x-0'
+  } lg:relative lg:translate-x-0 transition-all duration-300 shadow-xl`} 
+>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-600 dark:border-gray-700">
+        <div className="flex items-center justify-between px-6 py-4 h-16 bg-gradient-to-r from-gray-800 to-gray-700 dark:from-gray-900 dark:to-gray-800 border-b border-gray-600 dark:border-gray-700">
           <div className={`flex items-center gap-3 ${isCollapsed ? 'lg:justify-center' : ''}`}>
             <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center">
               <span className="text-white font-bold text-sm">AI</span>

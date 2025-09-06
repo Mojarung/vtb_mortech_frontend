@@ -81,14 +81,37 @@ export default function CandidateApplications() {
     switch (status) {
       case 'pending':
         return 'На рассмотрении'
-      case 'interview':
-        return 'Интервью'
+      case 'interview_scheduled':
+        return 'Интервью назначено'
+      case 'interview_completed':
+        return 'Интервью пройдено'
       case 'accepted':
         return 'Принято'
       case 'rejected':
         return 'Отклонено'
+      case 'reviewed':
+        return 'Просмотрено'
       default:
         return status
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      case 'interview_scheduled':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+      case 'interview_completed':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+      case 'accepted':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      case 'rejected':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      case 'reviewed':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
     }
   }
 
@@ -99,7 +122,7 @@ export default function CandidateApplications() {
   const stats = [
     { label: 'Всего заявок', value: applications.length, color: 'bg-blue-500' },
     { label: 'На рассмотрении', value: applications.filter(a => a.status === 'pending').length, color: 'bg-yellow-500' },
-    { label: 'Интервью', value: applications.filter(a => a.status === 'interview').length, color: 'bg-purple-500' },
+    { label: 'Интервью', value: applications.filter(a => a.status === 'interview_scheduled' || a.status === 'interview_completed').length, color: 'bg-purple-500' },
     { label: 'Принято', value: applications.filter(a => a.status === 'accepted').length, color: 'bg-green-500' }
   ]
 
@@ -152,7 +175,8 @@ export default function CandidateApplications() {
               {[
                 { key: 'all', label: 'Все заявки' },
                 { key: 'pending', label: 'На рассмотрении' },
-                { key: 'interview', label: 'Интервью' },
+                { key: 'interview_scheduled', label: 'Интервью назначено' },
+                { key: 'interview_completed', label: 'Интервью пройдено' },
                 { key: 'accepted', label: 'Принято' },
                 { key: 'rejected', label: 'Отклонено' }
               ].map((filterOption) => (
@@ -196,29 +220,32 @@ export default function CandidateApplications() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                            {application.position}
+                            {application.vacancy?.title || 'Неизвестная позиция'}
                           </h3>
-                          <span className={`px-3 py-1 text-xs font-medium rounded-full ${application.statusColor}`}>
+                          <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}>
                             {getStatusText(application.status)}
                           </span>
                         </div>
                         <p className="text-lg text-gray-600 dark:text-gray-400 mb-3">
-                          {application.company}
+                          {application.vacancy?.creator?.full_name || application.vacancy?.creator?.username || 'Неизвестная компания'}
                         </p>
                         <p className="text-gray-700 dark:text-gray-300 mb-4">
-                          {application.description}
+                          {application.vacancy?.description || 'Описание не указано'}
                         </p>
                         <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-500">
                           <div className="flex items-center gap-1">
                             <Calendar size={16} />
-                            Подано: {application.appliedDate}
+                            Подано: {new Date(application.uploaded_at).toLocaleDateString('ru-RU')}
                           </div>
                           <div className="flex items-center gap-1">
                             <Building size={16} />
-                            {application.location}
+                            {application.vacancy?.location || 'Не указано'}
                           </div>
                           <div className="font-medium text-green-600 dark:text-green-400">
-                            {application.salary}
+                            {application.vacancy?.salary_from && application.vacancy?.salary_to 
+                              ? `${application.vacancy.salary_from.toLocaleString()} - ${application.vacancy.salary_to.toLocaleString()} ₽`
+                              : 'Зарплата не указана'
+                            }
                           </div>
                         </div>
                       </div>
