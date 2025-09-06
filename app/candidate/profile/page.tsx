@@ -6,12 +6,23 @@ import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { apiClient, User as UserType, ProfileUpdateRequest } from '../../../lib/api'
+import Notification from '../../../components/Notification'
 import { useAuth } from '../../../contexts/AuthContext'
 
 export default function CandidateProfile() {
   const { user, updateUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [notifications, setNotifications] = useState<any[]>([])
+
+  const addNotification = (message: string, type: 'success' | 'error' | 'warning') => {
+    const id = Date.now().toString()
+    setNotifications(prev => [...prev, { id, message, type }])
+  }
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+  }
   const [profile, setProfile] = useState<ProfileUpdateRequest>({
     first_name: '',
     last_name: '',
@@ -84,7 +95,7 @@ export default function CandidateProfile() {
       setIsEditing(false)
     } catch (error) {
       console.error('Ошибка при обновлении профиля:', error)
-      alert('Ошибка при сохранении профиля')
+      addNotification('Ошибка при сохранении профиля', 'error')
     } finally {
       setLoading(false)
     }
@@ -568,6 +579,16 @@ export default function CandidateProfile() {
           </div>
         </div>
       </div>
+
+      {/* Уведомления */}
+      {notifications.map((notification) => (
+        <Notification
+          key={notification.id}
+          message={notification.message}
+          type={notification.type}
+          onClose={() => removeNotification(notification.id)}
+        />
+      ))}
     </div>
   )
 }

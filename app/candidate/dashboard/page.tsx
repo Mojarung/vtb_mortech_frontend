@@ -54,25 +54,25 @@ export default function CandidateDashboard() {
   const statsData = [
     {
       title: 'Всего интервью',
-      value: stats.totalInterviews.toString(),
+      value: (stats?.totalInterviews || 0).toString(),
       icon: Calendar,
       color: 'bg-blue-500'
     },
     {
       title: 'Завершенных',
-      value: stats.completedInterviews.toString(),
+      value: (stats?.completedInterviews || 0).toString(),
       icon: CheckCircle,
       color: 'bg-green-500'
     },
     {
       title: 'Запланированных',
-      value: stats.scheduledInterviews.toString(),
+      value: (stats?.scheduledInterviews || 0).toString(),
       icon: Clock,
       color: 'bg-yellow-500'
     },
     {
       title: 'Средний балл',
-      value: stats.averageScore.toString(),
+      value: (stats?.averageScore || 0).toString(),
       icon: FileText,
       color: 'bg-purple-500'
     }
@@ -138,7 +138,7 @@ export default function CandidateDashboard() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                   <p className="text-gray-500 mt-2">Загрузка интервью...</p>
                 </div>
-              ) : interviews.upcoming.length > 0 ? (
+              ) : (interviews?.upcoming?.length || 0) > 0 ? (
                 interviews.upcoming.map((interview: any, index: number) => (
                 <motion.div
                   key={interview.id}
@@ -203,7 +203,7 @@ export default function CandidateDashboard() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                   <p className="text-gray-500 mt-2">Загрузка истории...</p>
                 </div>
-              ) : interviews.completed.length > 0 ? (
+              ) : (interviews?.completed?.length || 0) > 0 ? (
                 interviews.completed.map((interview: any, index: number) => (
                 <motion.div
                   key={interview.id}

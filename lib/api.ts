@@ -1,5 +1,7 @@
-// API Configuration
+// Продакшн конфигурация
 const API_BASE_URL = 'https://mojarung-vtb-mortech-backend-b77e.twc1.net';
+
+console.log('🌐 API Configuration:', { API_BASE_URL });
 
 export interface User {
   id: number;
@@ -156,19 +158,19 @@ class ApiClient {
 
   // Методы для получения данных dashboard
   async getCandidateStats(): Promise<any> {
-    return this.request<any>('/candidate/stats');
+    return this.request<any>('/analytics/candidate/stats');
   }
 
   async getCandidateInterviews(): Promise<any> {
-    return this.request<any>('/candidate/interviews');
+    return this.request<any>('/analytics/candidate/recent-interviews');
   }
 
   async getHRStats(): Promise<any> {
-    return this.request<any>('/hr/stats');
+    return this.request<any>('/analytics/hr/stats');
   }
 
   async getHRInterviews(): Promise<any> {
-    return this.request<any>('/hr/interviews');
+    return this.request<any>('/analytics/hr/interviews');
   }
 
   // Методы для вакансий
@@ -235,6 +237,18 @@ class ApiClient {
   // Методы для кандидатов (HR)
   async getCandidates(): Promise<any> {
     return this.request<any>('/analytics/candidates');
+  }
+
+  async updateApplicationStatus(applicationId: number, status: string): Promise<any> {
+    console.log('🔄 Updating application status:', { applicationId, status });
+    const url = `/applications/${applicationId}/status?new_status=${status}`;
+    console.log('📡 Request URL:', url);
+    console.log('🔧 Method: PUT');
+    return this.request<any>(url, { method: 'PUT' });
+  }
+
+  async deleteApplication(applicationId: number): Promise<any> {
+    return this.request<any>(`/applications/${applicationId}`, { method: 'DELETE' });
   }
 
   async getCandidate(id: number): Promise<any> {

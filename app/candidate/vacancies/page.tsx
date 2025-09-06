@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { apiClient } from '../../../lib/api'
+import Notification from '../../../components/Notification'
 
 export default function CandidateVacancies() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -18,8 +19,19 @@ export default function CandidateVacancies() {
   })
   const [showFilters, setShowFilters] = useState(false)
   const [savedVacancies, setSavedVacancies] = useState<number[]>([])
+  const [appliedVacancies, setAppliedVacancies] = useState<number[]>([])
   const [vacancies, setVacancies] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [notifications, setNotifications] = useState<any[]>([])
+
+  const addNotification = (message: string, type: 'success' | 'error' | 'warning') => {
+    const id = Date.now().toString()
+    setNotifications(prev => [...prev, { id, message, type }])
+  }
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+  }
 
   useEffect(() => {
     const fetchVacancies = async () => {
@@ -36,7 +48,18 @@ export default function CandidateVacancies() {
       }
     }
 
+    const fetchApplications = async () => {
+      try {
+        const applications = await apiClient.getApplications()
+        const appliedIds = applications.map((app: any) => app.vacancy?.id).filter(Boolean)
+        setAppliedVacancies(appliedIds)
+      } catch (error) {
+        console.error('Error fetching applications:', error)
+      }
+    }
+
     fetchVacancies()
+    fetchApplications()
   }, [])
 
   const mockVacancies = [
@@ -188,10 +211,11 @@ export default function CandidateVacancies() {
 
       try {
         await apiClient.applyToVacancyWithFile(vacancyId, formData)
-        alert('Заявка на вакансию отправлена!')
+        setAppliedVacancies(prev => [...prev, vacancyId])
+        addNotification('Заявка на вакансию отправлена!', 'success')
       } catch (error) {
         console.error('Error applying to vacancy:', error)
-        alert('Ошибка при отправке заявки. Попробуйте позже.')
+        addNotification('Ошибка при отправке заявки. Попробуйте позже.', 'error')
       }
     }
     input.click()
@@ -400,9 +424,14 @@ export default function CandidateVacancies() {
                     </button>
                     <button
                       onClick={() => handleApply(vacancy.id)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      disabled={appliedVacancies.includes(vacancy.id)}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        appliedVacancies.includes(vacancy.id)
+                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
                     >
-                      Откликнуться
+                      {appliedVacancies.includes(vacancy.id) ? 'Заявка отправлена' : 'Откликнуться'}
                     </button>
                   </div>
                 </div>
@@ -430,6 +459,16 @@ export default function CandidateVacancies() {
           )}
         </div>
       </div>
+
+      {/* Уведомления */}
+      {notifications.map((notification) => (
+        <Notification
+          key={notification.id}
+          message={notification.message}
+          type={notification.type}
+          onClose={() => removeNotification(notification.id)}
+        />
+      ))}
     </div>
   )
 }

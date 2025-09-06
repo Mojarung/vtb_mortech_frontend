@@ -6,11 +6,22 @@ import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { apiClient } from '../../../lib/api'
+import Notification from '../../../components/Notification'
 import { useAuth } from '../../../contexts/AuthContext'
 
 export default function HRSettings() {
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(false)
+  const [toastNotifications, setToastNotifications] = useState<any[]>([])
+
+  const addNotification = (message: string, type: 'success' | 'error' | 'warning') => {
+    const id = Date.now().toString()
+    setToastNotifications(prev => [...prev, { id, message, type }])
+  }
+
+  const removeNotification = (id: string) => {
+    setToastNotifications(prev => prev.filter(n => n.id !== id))
+  }
   const [saving, setSaving] = useState(false)
   const { user } = useAuth()
   
@@ -50,10 +61,10 @@ export default function HRSettings() {
     try {
       setSaving(true)
       await apiClient.updateProfile(profile)
-      alert('Профиль успешно обновлен!')
+      addNotification('Профиль успешно обновлен!', 'success')
     } catch (error) {
       console.error('Error updating profile:', error)
-      alert('Ошибка при обновлении профиля')
+      addNotification('Ошибка при обновлении профиля', 'error')
     } finally {
       setSaving(false)
     }
@@ -61,7 +72,7 @@ export default function HRSettings() {
 
   const handleChangePassword = async () => {
     if (password.newPassword !== password.confirmPassword) {
-      alert('Пароли не совпадают')
+      addNotification('Пароли не совпадают', 'error')
       return
     }
     
@@ -71,11 +82,11 @@ export default function HRSettings() {
         oldPassword: password.oldPassword,
         newPassword: password.newPassword
       })
-      alert('Пароль успешно изменен!')
+      addNotification('Пароль успешно изменен!', 'success')
       setPassword({ oldPassword: '', newPassword: '', confirmPassword: '' })
     } catch (error) {
       console.error('Error changing password:', error)
-      alert('Ошибка при изменении пароля')
+      addNotification('Ошибка при изменении пароля', 'error')
     } finally {
       setSaving(false)
     }
@@ -385,6 +396,16 @@ export default function HRSettings() {
           </div>
         </div>
       </div>
+
+      {/* Уведомления */}
+      {toastNotifications.map((notification) => (
+        <Notification
+          key={notification.id}
+          message={notification.message}
+          type={notification.type}
+          onClose={() => removeNotification(notification.id)}
+        />
+      ))}
     </div>
   )
 }

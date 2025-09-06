@@ -48,7 +48,7 @@ export default function HRDashboard() {
   const statsData = [
     {
       title: 'Всего кандидатов',
-      value: stats.totalCandidates.toString(),
+      value: (stats?.totalCandidates || 0).toString(),
       change: '+8.5%',
       changeType: 'up',
       icon: Users,
@@ -56,7 +56,7 @@ export default function HRDashboard() {
     },
     {
       title: 'Всего интервью',
-      value: stats.totalInterviews.toString(),
+      value: (stats?.totalInterviews || 0).toString(),
       change: '+1.3%',
       changeType: 'up',
       icon: Package,
@@ -64,7 +64,7 @@ export default function HRDashboard() {
     },
     {
       title: 'Успешных найма',
-      value: stats.successfulHires.toString(),
+      value: (stats?.successfulHires || 0).toString(),
       change: '-4.3%',
       changeType: 'down',
       icon: TrendingUp,
@@ -72,7 +72,7 @@ export default function HRDashboard() {
     },
     {
       title: 'Ожидающих',
-      value: stats.pending.toString(),
+      value: (stats?.pending || 0).toString(),
       change: '+1.8%',
       changeType: 'up',
       icon: Clock,
@@ -168,7 +168,7 @@ export default function HRDashboard() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                   <p className="text-gray-500 mt-2">Загрузка интервью...</p>
                 </div>
-              ) : interviews.length > 0 ? (
+              ) : (interviews?.length || 0) > 0 ? (
                 interviews.map((interview: any) => (
                 <div key={interview.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <div className="flex items-center gap-3 mb-2">

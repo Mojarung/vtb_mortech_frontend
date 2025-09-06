@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { apiClient } from '../../../lib/api'
+import Notification from '../../../components/Notification'
 
 export default function HRVacancies() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -20,6 +21,17 @@ export default function HRVacancies() {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [vacancies, setVacancies] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [filteredVacancies, setFilteredVacancies] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
+
+  const addNotification = (message: string, type: 'success' | 'error' | 'warning') => {
+    const id = Date.now().toString()
+    setNotifications(prev => [...prev, { id, message, type }])
+  }
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+  }
 
   // Форма создания вакансии
   const [newVacancy, setNewVacancy] = useState({
@@ -31,7 +43,8 @@ export default function HRVacancies() {
     location: '',
     employment_type: '',
     experience_level: '',
-    benefits: ''
+    benefits: '',
+    company: ''
   })
 
   useEffect(() => {
@@ -40,9 +53,11 @@ export default function HRVacancies() {
         setLoading(true)
         const data = await apiClient.getVacancies()
         setVacancies(data)
+        setFilteredVacancies(data)
       } catch (error) {
         console.error('Error fetching vacancies:', error)
         setVacancies([])
+        setFilteredVacancies([])
       } finally {
         setLoading(false)
       }
@@ -50,6 +65,41 @@ export default function HRVacancies() {
 
     fetchVacancies()
   }, [])
+
+  // Фильтрация вакансий
+  useEffect(() => {
+    let filtered = vacancies
+
+    // Поиск по названию, компании и описанию
+    if (searchTerm) {
+      filtered = filtered.filter(vacancy => 
+        vacancy.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vacancy.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vacancy.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Фильтры
+    if (selectedFilters.location) {
+      filtered = filtered.filter(vacancy => 
+        vacancy.location?.toLowerCase().includes(selectedFilters.location.toLowerCase())
+      )
+    }
+
+    if (selectedFilters.experience) {
+      filtered = filtered.filter(vacancy => 
+        vacancy.experience_level === selectedFilters.experience
+      )
+    }
+
+    if (selectedFilters.employment) {
+      filtered = filtered.filter(vacancy => 
+        vacancy.employment_type === selectedFilters.employment
+      )
+    }
+
+    setFilteredVacancies(filtered)
+  }, [vacancies, searchTerm, selectedFilters])
 
   const filterOptions = {
     location: ['Москва', 'Санкт-Петербург', 'Удаленно', 'Екатеринбург', 'Новосибирск'],
@@ -59,18 +109,6 @@ export default function HRVacancies() {
     schedule: ['Полный день', 'Гибкий график', 'Сменный график', 'Удаленная работа']
   }
 
-  const filteredVacancies = vacancies.filter(vacancy => {
-    const matchesSearch = vacancy.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vacancy.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vacancy.description.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesLocation = !selectedFilters.location || vacancy.location === selectedFilters.location
-    const matchesExperience = !selectedFilters.experience || vacancy.experience.includes(selectedFilters.experience)
-    const matchesEmployment = !selectedFilters.employment || vacancy.employment === selectedFilters.employment
-    const matchesSchedule = !selectedFilters.schedule || vacancy.schedule === selectedFilters.schedule
-
-    return matchesSearch && matchesLocation && matchesExperience && matchesEmployment && matchesSchedule
-  })
 
   const handleCreateVacancy = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,6 +124,7 @@ export default function HRVacancies() {
       // Обновляем список вакансий
       const data = await apiClient.getVacancies()
       setVacancies(data)
+      setFilteredVacancies(data)
       
       // Сбрасываем форму
       setNewVacancy({
@@ -101,10 +140,10 @@ export default function HRVacancies() {
       })
       setShowCreateForm(false)
       
-      alert('Вакансия успешно создана!')
+      addNotification('Вакансия успешно создана!', 'success')
     } catch (error) {
       console.error('Error creating vacancy:', error)
-      alert('Ошибка при создании вакансии. Попробуйте позже.')
+      addNotification('Ошибка при создании вакансии. Попробуйте позже.', 'error')
     }
   }
 
@@ -116,11 +155,12 @@ export default function HRVacancies() {
         // Обновляем список вакансий
         const data = await apiClient.getVacancies()
         setVacancies(data)
+        setFilteredVacancies(data)
         
-        alert('Вакансия удалена!')
+        addNotification('Вакансия удалена!', 'success')
       } catch (error) {
         console.error('Error deleting vacancy:', error)
-        alert('Ошибка при удалении вакансии. Попробуйте позже.')
+        addNotification('Ошибка при удалении вакансии. Попробуйте позже.', 'error')
       }
     }
   }
@@ -178,6 +218,19 @@ export default function HRVacancies() {
                       onChange={(e) => setNewVacancy({...newVacancy, title: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Например: Frontend Developer"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Компания *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newVacancy.company}
+                      onChange={(e) => setNewVacancy({...newVacancy, company: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Например: ВТБ"
                     />
                   </div>
                   <div>
@@ -482,6 +535,16 @@ export default function HRVacancies() {
           )}
         </div>
       </div>
+
+      {/* Уведомления */}
+      {notifications.map((notification) => (
+        <Notification
+          key={notification.id}
+          message={notification.message}
+          type={notification.type}
+          onClose={() => removeNotification(notification.id)}
+        />
+      ))}
     </div>
   )
 }
