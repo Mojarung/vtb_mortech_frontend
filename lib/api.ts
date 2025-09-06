@@ -8,6 +8,29 @@ export interface User {
   full_name?: string;
   is_active: boolean;
   created_at: string;
+  // Profile fields
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  birth_date?: string;
+  location?: string;
+  about?: string;
+  desired_salary?: number;
+  ready_to_relocate?: boolean;
+  employment_type?: 'full_time' | 'part_time' | 'contract' | 'freelance' | 'internship';
+  education?: Array<{
+    institution: string;
+    degree: string;
+    field: string;
+    period: string;
+  }>;
+  skills?: string[];
+  work_experience?: Array<{
+    company: string;
+    position: string;
+    period: string;
+    description: string;
+  }>;
 }
 
 export interface LoginRequest {
@@ -26,6 +49,31 @@ export interface RegisterRequest {
 export interface TokenResponse {
   access_token: string;
   token_type: string;
+}
+
+export interface ProfileUpdateRequest {
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  birth_date?: string;
+  location?: string;
+  about?: string;
+  desired_salary?: number;
+  ready_to_relocate?: boolean;
+  employment_type?: 'full_time' | 'part_time' | 'contract' | 'freelance' | 'internship';
+  education?: Array<{
+    institution: string;
+    degree: string;
+    field: string;
+    period: string;
+  }>;
+  skills?: string[];
+  work_experience?: Array<{
+    company: string;
+    position: string;
+    period: string;
+    description: string;
+  }>;
 }
 
 class ApiClient {
@@ -156,8 +204,8 @@ class ApiClient {
   }
 
   // Методы для настроек пользователя
-  async updateProfile(data: any): Promise<any> {
-    return this.request<any>('/auth/profile', {
+  async updateProfile(data: ProfileUpdateRequest): Promise<User> {
+    return this.request<User>('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
