@@ -14,7 +14,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Briefcase
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -31,6 +32,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
   const hrMenuItems = [
     { icon: BarChart3, label: t('dashboard'), href: '/hr/dashboard' },
+    { icon: Briefcase, label: 'Вакансии', href: '/hr/vacancies' },
     { icon: Users, label: t('candidates'), href: '/hr/candidates' },
     { icon: Calendar, label: t('interviews'), href: '/hr/interviews' },
     { icon: PieChart, label: t('analytics'), href: '/hr/analytics' },

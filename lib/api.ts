@@ -185,6 +185,26 @@ class ApiClient {
     });
   }
 
+  async createVacancy(vacancyData: any): Promise<any> {
+    return this.request<any>('/vacancies', {
+      method: 'POST',
+      body: JSON.stringify(vacancyData),
+    });
+  }
+
+  async updateVacancy(vacancyId: number, vacancyData: any): Promise<any> {
+    return this.request<any>(`/vacancies/${vacancyId}`, {
+      method: 'PUT',
+      body: JSON.stringify(vacancyData),
+    });
+  }
+
+  async deleteVacancy(vacancyId: number): Promise<any> {
+    return this.request<any>(`/vacancies/${vacancyId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Методы для заявок
   async getApplications(): Promise<any> {
     return this.request<any>('/applications');

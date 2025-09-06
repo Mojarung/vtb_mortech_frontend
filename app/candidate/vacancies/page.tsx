@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Search, Filter, MapPin, Clock, DollarSign, Users, Star, Bookmark, BookmarkCheck } from 'lucide-react'
+import { Search, Filter, MapPin, Clock, DollarSign, Users, Bookmark, BookmarkCheck } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
@@ -309,12 +309,6 @@ export default function CandidateVacancies() {
                       <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                         {vacancy.title}
                       </h3>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {vacancy.rating}
-                        </span>
-                      </div>
                     </div>
                     <p className="text-lg font-medium text-blue-600 dark:text-blue-400 mb-2">
                       {vacancy.company}
@@ -383,7 +377,7 @@ export default function CandidateVacancies() {
 
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Опубликовано: {vacancy.postedDate} • Дедлайн: {vacancy.deadline}
+                    Опубликовано: {vacancy.postedDate}
                   </div>
                   <div className="flex gap-2">
                     <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
