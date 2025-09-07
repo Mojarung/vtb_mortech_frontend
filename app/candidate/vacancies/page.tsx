@@ -175,6 +175,20 @@ export default function CandidateVacancies() {
     schedule: ['Полный день', 'Гибкий график', 'Сменный график', 'Удаленная работа']
   }
 
+  const formatSalary = (vacancy: any) => {
+    const hasRange = vacancy?.salary_from || vacancy?.salary_to
+    if (hasRange) {
+      const from = vacancy?.salary_from ? `${vacancy.salary_from.toLocaleString('ru-RU')} ₽` : ''
+      const to = vacancy?.salary_to ? `${vacancy.salary_to.toLocaleString('ru-RU')} ₽` : ''
+      if (from && to) return `${from} — ${to}`
+      return from || to
+    }
+    return vacancy?.salary || 'Не указана'
+  }
+
+  const getExperience = (vacancy: any) => vacancy?.experience_level || vacancy?.experience || 'Не указано'
+  const getEmployment = (vacancy: any) => vacancy?.employment_type || vacancy?.employment || 'Не указано'
+
   const filteredVacancies = vacancies.filter(vacancy => {
     const matchesSearch = vacancy.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          vacancy.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -327,7 +341,7 @@ export default function CandidateVacancies() {
             </select>
           </div>
 
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -340,25 +354,22 @@ export default function CandidateVacancies() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow border border-gray-100 dark:border-gray-700"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <div className="flex justify-between items-start gap-4 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                         {vacancy.title}
                       </h3>
                     </div>
-                    <p className="text-lg font-medium text-blue-600 dark:text-blue-400 mb-2">
-                      {vacancy.company}
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      {vacancy.description}
+                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mt-1">
+                      {String(vacancy.company || '').trim() || 'Компания не указана'}
                     </p>
                   </div>
                   <button
                     onClick={() => handleSaveVacancy(vacancy.id)}
-                    className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 transition-colors"
                   >
                     {savedVacancies.includes(vacancy.id) ? 
                       <BookmarkCheck className="h-5 w-5 text-blue-600" /> : 
@@ -367,27 +378,27 @@ export default function CandidateVacancies() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{vacancy.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{vacancy.salary}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{vacancy.experience}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{vacancy.applicants} заявок</span>
-                  </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
+                  {vacancy.description}
+                </p>
+
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs">
+                    <MapPin className="h-3.5 w-3.5" /> {vacancy.location || 'Локация не указана'}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-xs">
+                    <DollarSign className="h-3.5 w-3.5" /> {formatSalary(vacancy)}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-xs">
+                    <Clock className="h-3.5 w-3.5" /> {getExperience(vacancy)}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 text-xs">
+                    <Users className="h-3.5 w-3.5" /> {getEmployment(vacancy)}
+                  </span>
                 </div>
 
                 <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Требования:</h4>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Требования</h4>
                   <div className="flex flex-wrap gap-2">
                     {vacancy.requirements.map((req: string, idx: number) => (
                       <span
@@ -401,7 +412,7 @@ export default function CandidateVacancies() {
                 </div>
 
                 <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Условия:</h4>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Условия</h4>
                   <div className="flex flex-wrap gap-2">
                     {vacancy.benefits.map((benefit: string, idx: number) => (
                       <span
@@ -415,17 +426,17 @@ export default function CandidateVacancies() {
                 </div>
 
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Опубликовано: {vacancy.postedDate}
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Опубликовано: {vacancy.postedDate || '—'}
                   </div>
                   <div className="flex gap-2">
-                    <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                    <button className="px-3 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-sm">
                       Подробнее
                     </button>
                     <button
                       onClick={() => handleApply(vacancy.id)}
                       disabled={appliedVacancies.includes(vacancy.id)}
-                      className={`px-4 py-2 rounded-lg transition-colors ${
+                      className={`px-3 py-2 rounded-lg transition-colors text-sm ${
                         appliedVacancies.includes(vacancy.id)
                           ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                           : 'bg-blue-600 text-white hover:bg-blue-700'
