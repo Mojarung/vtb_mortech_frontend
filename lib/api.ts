@@ -83,14 +83,28 @@ class ApiClient {
   private baseURL: string;
 
   constructor(baseURL: string) {
-    this.baseURL = baseURL;
+    // Нормализуем базовый URL: принудительно HTTPS и без завершающего слэша
+    try {
+      const parsed = new URL(baseURL);
+      if (parsed.protocol === 'http:') {
+        parsed.protocol = 'https:';
+        console.warn('⚠️ API Client: Протокол http заменён на https для baseURL:', baseURL);
+      }
+      this.baseURL = parsed.origin;
+    } catch {
+      // Fallback для случаев, когда baseURL не является валидным URL
+      this.baseURL = baseURL
+        .replace(/^http:\/\//i, 'https://')
+        .replace(/\/+$/g, '');
+    }
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
+    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${this.baseURL}${path}`;
     
     console.log('🌐 API Client: Making request to:', url);
     console.log('🌐 API Client: Options:', options);
@@ -109,7 +123,11 @@ class ApiClient {
     const response = await fetch(url, config);
     
     console.log('🌐 API Client: Response status:', response.status);
-    console.log('🌐 API Client: Response headers:', Object.fromEntries(response.headers.entries()));
+    const responseHeaders: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+    console.log('🌐 API Client: Response headers:', responseHeaders);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
