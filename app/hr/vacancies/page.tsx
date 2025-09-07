@@ -118,6 +118,8 @@ export default function HRVacancies() {
         salary_from: newVacancy.salary_from ? parseInt(newVacancy.salary_from) : null,
         salary_to: newVacancy.salary_to ? parseInt(newVacancy.salary_to) : null
       }
+
+      console.log('📝 Отправка создания вакансии. Данные:', vacancyData)
       
       await apiClient.createVacancy(vacancyData)
       
@@ -142,8 +144,10 @@ export default function HRVacancies() {
       
       addNotification('Вакансия успешно создана!', 'success')
     } catch (error) {
-      console.error('Error creating vacancy:', error)
-      addNotification('Ошибка при создании вакансии. Попробуйте позже.', 'error')
+      const err = error as any
+      const message = err?.message || 'Неизвестная ошибка'
+      console.error('❌ Ошибка при создании вакансии:', err)
+      addNotification(`Ошибка при создании вакансии: ${message}`, 'error')
     }
   }
 
