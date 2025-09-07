@@ -224,7 +224,8 @@ class ApiClient {
   }
 
   async createVacancy(vacancyData: any): Promise<any> {
-    return this.request<any>('/vacancies', {
+    // Важно: бекенд ожидает завершающий слэш /vacancies/
+    return this.request<any>('/vacancies/', {
       method: 'POST',
       body: JSON.stringify(vacancyData),
     });
