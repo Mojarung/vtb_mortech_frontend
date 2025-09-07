@@ -1,5 +1,5 @@
 // Продакшн конфигурация
-const API_BASE_URL = 'https://mojarung-vtb-mortech-backend-b77e.twc1.net';
+const API_BASE_URL = 'https://mojarung-vtb-mortech-backend-ef3c.twc1.net';
 
 console.log('🌐 API Configuration:', { API_BASE_URL });
 
