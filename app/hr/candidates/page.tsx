@@ -343,6 +343,17 @@ export default function HRCandidates() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
+                        {candidate.resume_url && (
+                          <a
+                            className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
+                            title="Скачать резюме"
+                            href={apiClient.getResumeDownloadUrl(candidate.resume_url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Скачать
+                          </a>
+                        )}
                         <button 
                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                           title="Просмотреть анализ ИИ"

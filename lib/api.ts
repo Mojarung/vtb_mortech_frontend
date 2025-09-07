@@ -253,6 +253,12 @@ class ApiClient {
     return this.request<any>(`/applications/${id}`);
   }
 
+  // Вспомогательный метод: абсолютная ссылка на скачивание резюме
+  getResumeDownloadUrl(resumePathOrApi: string): string {
+    const path = resumePathOrApi.startsWith('/') ? resumePathOrApi : `/${resumePathOrApi}`
+    return `${this.baseURL}${path}`
+  }
+
   // Методы для кандидатов (HR)
   async getCandidates(): Promise<any> {
     return this.request<any>('/analytics/candidates');
