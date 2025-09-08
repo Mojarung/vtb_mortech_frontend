@@ -72,8 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           stack: error instanceof Error ? error.stack : undefined
         });
         setUser(null);
-        // HttpOnly cookies нельзя очистить из JavaScript
-        // Очистка произойдет автоматически при logout или истечении срока
+        // HttpOnly cookies нельзя очистить из JavaScript, но мы все равно попытаемся
+        if (typeof window !== 'undefined') {
+            document.cookie = 'access_token=; Max-Age=0; path=/; domain=.twc1.net; secure; samesite=None';
+            document.cookie = 'access_token=; Max-Age=0; path=/; domain=localhost; secure=False; samesite=Lax'; // Для локальной отладки
+        }
       } finally {
         console.log('🔍 AuthContext: Setting loading to false');
         setLoading(false);
@@ -103,10 +106,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       console.log('🚀 AuthContext: Calling apiClient.login...');
-      const loginResponse = await apiClient.login({ username, password });
-      console.log('✅ AuthContext: Login successful, response:', loginResponse);
+      // Здесь мы не ожидаем токен в ответе, так как он устанавливается как HttpOnly кука
+      await apiClient.login({ username, password }); 
+      console.log('✅ AuthContext: Login request sent. Waiting for cookie to be set...');
       
-      console.log('⏳ AuthContext: Waiting for cookies to be set...');
       // Задержка для установки HttpOnly cookies
       await new Promise(resolve => setTimeout(resolve, 500));
       
@@ -147,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       await apiClient.register(userData);
-      // После регистрации автоматически логинимся
+      // После регистрации автоматически логинимся, ожидая HttpOnly куку
       await apiClient.login({ username: userData.username, password: userData.password });
       
       // Задержка для установки HttpOnly cookies
@@ -175,16 +178,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       setUser(null);
+      // Делаем запрос на сервер для удаления HttpOnly куки и очищаем клиентскую куку
       await apiClient.logout();
+      if (typeof window !== 'undefined') {
+        document.cookie = 'access_token=; Max-Age=0; path=/; domain=.twc1.net; secure; samesite=None';
+        document.cookie = 'access_token=; Max-Age=0; path=/; domain=localhost; secure=False; samesite=Lax'; // Для локальной отладки
+      }
       // Перенаправляем на главную страницу после logout
       if (typeof window !== 'undefined') {
         window.location.href = '/';
       }
     } catch (error) {
       console.error('Logout failed:', error);
-      // Даже если logout не удался, очищаем локальное состояние
+      // Даже если logout не удался, очищаем локальное состояние и куки
       setUser(null);
       if (typeof window !== 'undefined') {
+        document.cookie = 'access_token=; Max-Age=0; path=/; domain=.twc1.net; secure; samesite=None';
+        document.cookie = 'access_token=; Max-Age=0; path=/; domain=localhost; secure=False; samesite=Lax'; // Для локальной отладки
         window.location.href = '/';
       }
     }

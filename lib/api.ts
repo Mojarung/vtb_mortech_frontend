@@ -1,5 +1,5 @@
 // Продакшн конфигурация
-const API_BASE_URL = 'https://mojarung-vtb-mortech-backend-ef3c.twc1.net';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mojarung-vtb-mortech-backend-ef3c.twc1.net';
 
 console.log('🌐 API Configuration:', { API_BASE_URL });
 
@@ -83,20 +83,9 @@ class ApiClient {
   private baseURL: string;
 
   constructor(baseURL: string) {
-    // Нормализуем базовый URL: принудительно HTTPS и без завершающего слэша
-    try {
-      const parsed = new URL(baseURL);
-      if (parsed.protocol === 'http:') {
-        parsed.protocol = 'https:';
-        console.warn('⚠️ API Client: Протокол http заменён на https для baseURL:', baseURL);
-      }
-      this.baseURL = parsed.origin;
-    } catch {
-      // Fallback для случаев, когда baseURL не является валидным URL
-      this.baseURL = baseURL
-        .replace(/^http:\/\//i, 'https://')
-        .replace(/\/+$/g, '');
-    }
+    // Точное копирование базового URL без преобразований
+    this.baseURL = baseURL;
+    console.log('🌐 API Client: Base URL is', this.baseURL);
   }
 
   private async request<T>(
@@ -118,37 +107,55 @@ class ApiClient {
       credentials: 'include', // Важно для отправки куки
     };
 
+    // Удаляем логику добавления токена в заголовок Authorization, так как теперь используются куки
+    // if (typeof window !== 'undefined') {
+    //   const token = localStorage.getItem('access_token');
+    //   if (token) {
+    //     config.headers = {
+    //       ...(config.headers as Record<string, string>),
+    //       'Authorization': `Bearer ${token}`,
+    //     };
+    //   }
+    // }
+    
     console.log('🌐 API Client: Final config:', config);
 
-    const response = await fetch(url, config);
-    
-    console.log('🌐 API Client: Response status:', response.status);
-    const responseHeaders: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
-      responseHeaders[key] = value;
-    });
-    console.log('🌐 API Client: Response headers:', responseHeaders);
+    try {
+      const response = await fetch(url, config);
+      
+      console.log('🌐 API Client: Response status:', response.status);
+      console.log('🌐 API Client: Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Client: Full error response:', errorText);
+        
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ API Client: Request failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData
+        });
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('❌ API Client: Request failed:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorData
-      });
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      console.log('✅ API Client: Request successful:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ API Client: Fetch error', error);
+      throw error;
     }
-
-    const data = await response.json();
-    console.log('✅ API Client: Request successful:', data);
-    return data;
   }
 
   async login(credentials: LoginRequest): Promise<TokenResponse> {
-    return this.request<TokenResponse>('/auth/login', {
+    console.log('🔐 API Client: Login credentials:', credentials);
+    const result = await this.request<TokenResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
+    console.log('🔐 API Client: Login result:', result);
+    return result;
   }
 
   async register(userData: RegisterRequest): Promise<User> {
@@ -259,9 +266,33 @@ class ApiClient {
     return `${this.baseURL}${path}`
   }
 
+  // Вспомогательный метод: абсолютная ссылка на скачивание резюме по resume_id
+  getResumeDownloadUrlById(resumeId: number): string {
+    return `${this.baseURL}/resumes/${resumeId}/download`
+  }
+
   // Методы для кандидатов (HR)
-  async getCandidates(): Promise<any> {
-    return this.request<any>('/analytics/candidates');
+  async getCandidates(params: { 
+    processed?: boolean, 
+    status?: string, 
+    position?: string 
+  } = {}): Promise<any> {
+    const queryParams = new URLSearchParams()
+    
+    // Всегда фильтруем только обработанные резюме
+    queryParams.append('processed', 'true')
+    
+    if (params.status) {
+      queryParams.append('status_filter', params.status)
+    }
+    
+    if (params.position) {
+      queryParams.append('position', params.position)
+    }
+    
+    const url = `/applications/all?${queryParams.toString()}`
+    console.log('🔍 Fetching candidates with URL:', url)
+    return this.request<any>(url)
   }
 
   async updateApplicationStatus(applicationId: number, status: string): Promise<any> {
@@ -278,6 +309,10 @@ class ApiClient {
 
   async getCandidate(id: number): Promise<any> {
     return this.request<any>(`/candidates/${id}`);
+  }
+
+  async getResumeAnalysis(resumeId: number): Promise<any> {
+    return this.request<any>(`/resumes/${resumeId}/analysis`)
   }
 
   // Методы для настроек пользователя

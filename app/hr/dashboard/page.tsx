@@ -7,6 +7,7 @@ import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { ProtectedRoute } from '../../../components/ProtectedRoute'
 import { apiClient } from '../../../lib/api'
+import { useAuth } from '../../../contexts/AuthContext'
 
 export default function HRDashboard() {
   const [stats, setStats] = useState({
@@ -17,16 +18,40 @@ export default function HRDashboard() {
   })
   const [interviews, setInterviews] = useState([])
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [statsData, interviewsData] = await Promise.all([
-          apiClient.getHRStats(),
-          apiClient.getHRInterviews()
-        ])
-        setStats(statsData)
+        
+        // Получаем реальные данные кандидатов
+        const candidatesData = await apiClient.getCandidates({ processed: true })
+        const candidates = Array.isArray(candidatesData) ? candidatesData : []
+        
+        // Фильтруем только кандидатов текущего HR
+        const myCandidates = candidates.filter((candidate: any) => 
+          candidate?.vacancy?.creator_id && user?.id ? 
+          candidate.vacancy.creator_id === user.id : true
+        )
+        
+        // Подсчитываем статистику
+        const totalCandidates = myCandidates.length
+        const successfulHires = myCandidates.filter((c: any) => c.status === 'accepted').length
+        const pending = myCandidates.filter((c: any) => c.status === 'pending').length
+        const totalInterviews = myCandidates.filter((c: any) => 
+          c.status === 'interview_scheduled' || c.status === 'interview_completed'
+        ).length
+        
+        setStats({
+          totalCandidates,
+          totalInterviews,
+          successfulHires,
+          pending
+        })
+        
+        // Получаем интервью (пока моковые данные)
+        const interviewsData = await apiClient.getHRInterviews().catch(() => [])
         setInterviews(interviewsData)
       } catch (error) {
         console.error('Error fetching HR data:', error)
@@ -43,8 +68,10 @@ export default function HRDashboard() {
       }
     }
 
-    fetchData()
-  }, [])
+    if (user) {
+      fetchData()
+    }
+  }, [user])
   const statsData = [
     {
       title: 'Всего кандидатов',

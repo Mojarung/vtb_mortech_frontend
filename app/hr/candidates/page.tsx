@@ -7,6 +7,75 @@ import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { apiClient } from '../../../lib/api'
 import Notification from '../../../components/Notification'
+import { useAuth } from '../../../contexts/AuthContext'
+
+function extractRecommendation(notes?: string | null): string {
+  if (!notes) return '—'
+  const marker = 'РЕКОМЕНДАЦИЯ_СТРУКТУРА:'
+  const idx = notes.indexOf(marker)
+  if (idx === -1) return '—'
+  const after = notes.slice(idx + marker.length).trim()
+  const firstLine = after.split(/\r?\n/)[0].trim()
+  return firstLine || '—'
+}
+
+function extractFromNotes(notes?: string | null, label?: string): string {
+  if (!notes) return '—'
+  const lines = notes.split(/\r?\n/)
+  if (label) {
+    const line = lines.find(l => l.includes(label))
+    if (line) {
+      const parts = line.split(':')
+      if (parts.length > 1) {
+        const value = parts.slice(1).join(':').trim()
+        return value || '—'
+      }
+    }
+  }
+  return '—'
+}
+
+function sanitizeListItem(item: string): string {
+  if (!item) return ''
+  return item
+    .trim()
+    .replace(/^["']|["']$/g, '') // Remove leading/trailing quotes
+    .replace(/\s*@[^\s]+\s*\([^)]*\)\s*$/g, '') // Remove @username (description) patterns
+    .trim()
+}
+
+function extractAiBlock(notes?: string | null): string {
+  if (!notes) return ''
+  const marker = '🤖 АНАЛИЗ ИИ:'
+  const idx = notes.indexOf(marker)
+  return idx >= 0 ? notes.slice(idx) : notes
+}
+
+function getRecommendationBadgeClasses(text: string): string {
+  const t = (text || '').toLowerCase()
+  if (!t || t === '—') return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+  if (t.includes('не рекоменд')) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+  if (t.includes('требует') || t.includes('проверь')) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+  if (t.includes('рекоменд')) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+  return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+}
+
+function getStatusBadgeClasses(status: string): string {
+  switch (status) {
+    case 'pending':
+      return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+    case 'interview_scheduled':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+    case 'interview_completed':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+    case 'accepted':
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    case 'rejected':
+      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+  }
+}
 
 export default function HRCandidates() {
   const [showFilters, setShowFilters] = useState(false)
@@ -17,10 +86,12 @@ export default function HRCandidates() {
   const [loading, setLoading] = useState(true)
   const [filteredCandidates, setFilteredCandidates] = useState<any[]>([])
   const [selectedAnalysis, setSelectedAnalysis] = useState<string | null>(null)
+  const [selectedAnalysisData, setSelectedAnalysisData] = useState<any | null>(null)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
   const [editingStatus, setEditingStatus] = useState<number | null>(null)
   const [newStatus, setNewStatus] = useState('')
   const [notifications, setNotifications] = useState<any[]>([])
+  const { user } = useAuth()
 
   const addNotification = (message: string, type: 'success' | 'error' | 'warning') => {
     const id = Date.now().toString()
@@ -57,21 +128,90 @@ export default function HRCandidates() {
     const fetchCandidates = async () => {
       try {
         setLoading(true)
-        const data = await apiClient.getCandidates()
-        setCandidates(data)
-        setFilteredCandidates(data)
+        console.log('🚀 Начало загрузки кандидатов')
+        
+        // Получаем только обработанные заявки
+        const data = await apiClient.getCandidates({ processed: true })
+        
+        console.log('📦 Полученные данные:', data)
+        const list = Array.isArray(data) ? data : []
+        const onlyMineAndProcessed = list.filter((r: any) => {
+          const isProcessed = r.processed === true
+          const sameHr = r?.vacancy?.creator_id && user?.id ? r.vacancy.creator_id === user.id : true
+          return isProcessed && sameHr
+        })
+        // Маппим базовые данные
+        const baseMapped = onlyMineAndProcessed.map((r: any) => {
+          const nameFromNotes = extractFromNotes(r?.notes, '• Имя')
+          const fullNameCandidate = r?.analysis?.name || nameFromNotes || r?.user?.full_name || [r?.user?.first_name, r?.user?.last_name].filter(Boolean).join(' ').trim() || r?.user?.username || '—'
+          const position = r?.vacancy?.title || extractFromNotes(r?.notes, '• Позиция') || '—'
+          const date = r?.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString() : '—'
+          const rec = r?.analysis?.recommendation || extractFromNotes(r?.notes, '🎯 РЕКОМЕНДАЦИЯ') || extractRecommendation(r?.notes)
+          return {
+            id: r.id,
+            candidate_name: fullNameCandidate,
+            position,
+            date,
+            type: '—',
+            status: r.status,
+            recommended: rec && rec !== '—' ? rec : '—',
+            resume_path: r.file_path,
+            ai_analysis: r?.notes ? extractAiBlock(r.notes) : (r?.analysis ? JSON.stringify(r.analysis, null, 2) : ''),
+            _resume: r
+          }
+        })
+
+        // Подгружаем анализы с бэка для каждого резюме (если нет analysis/notes)
+        const withAnalysis = await Promise.all(baseMapped.map(async (item: any) => {
+          if (item.recommended !== '—' && item.candidate_name !== '—' && item.ai_analysis) return item
+          try {
+            const analysis = await apiClient.getResumeAnalysis(item.id)
+            const name = analysis?.name || item.candidate_name
+            const recommendation = analysis?.recommendation || item.recommended
+            const aiText = analysis ? JSON.stringify(analysis, null, 2) : item.ai_analysis
+            return {
+              ...item,
+              candidate_name: name || item.candidate_name,
+              recommended: recommendation || item.recommended,
+              ai_analysis: aiText || item.ai_analysis
+            }
+          } catch (e) {
+            return item
+          }
+        }))
+
+        if (withAnalysis.length === 0) {
+          console.warn('🚨 Нет подходящих заявок после фильтрации (processed + hr)')
+          addNotification('Нет заявок для вашего аккаунта HR', 'warning')
+        } else {
+          console.log(`✅ К отображению: ${withAnalysis.length}`)
+          console.log('🔍 Пример записи:', withAnalysis[0])
+        }
+
+        setCandidates(withAnalysis)
+        setFilteredCandidates(withAnalysis)
       } catch (error) {
-        console.error('Error fetching candidates:', error)
-        // Fallback to empty array if API fails
+        console.error('❌ Ошибка получения кандидатов:', error)
+        
+        // Более информативное уведомление об ошибке
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : 'Неизвестная ошибка при получении кандидатов'
+        
+        addNotification(errorMessage, 'error')
+        
+        // Очистка состояния
         setCandidates([])
         setFilteredCandidates([])
       } finally {
         setLoading(false)
+        console.log('🏁 Загрузка кандидатов завершена')
       }
     }
 
-    fetchCandidates()
-  }, [])
+    // Запускаем загрузку только когда есть данные пользователя
+    if (user) fetchCandidates()
+  }, [user])
 
   // Фильтрация кандидатов
   useEffect(() => {
@@ -274,13 +414,10 @@ export default function HRCandidates() {
                     Дата
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Тип
+                    Рекомендация
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Статус
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Рекомендуется
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Действия
@@ -323,35 +460,29 @@ export default function HRCandidates() {
                       {candidate.date}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {candidate.type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${candidate.statusColor}`}>
-                        {getStatusText(candidate.status)}
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRecommendationBadgeClasses(candidate.recommended)}`}>
+                        {candidate.recommended}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        candidate.recommended === 'Да' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : candidate.recommended === 'Нет'
-                          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                      }`}>
-                        {candidate.recommended}
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClasses(candidate.status)}`}>
+                        {getStatusText(candidate.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
-                        {candidate.resume_url && (
+                        {candidate.id && (
                           <a
-                            className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                             title="Скачать резюме"
-                            href={apiClient.getResumeDownloadUrl(candidate.resume_url)}
+                            href={apiClient.getResumeDownloadUrlById(candidate.id)}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            Скачать
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-gray-600 dark:text-gray-300">
+                              <path d="M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 12.586V4a1 1 0 011-1z" />
+                              <path d="M5 15a1 1 0 011 1v2h12v-2a1 1 0 112 0v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3a1 1 0 012 0v2h2v-2a1 1 0 011-1z" />
+                            </svg>
                           </a>
                         )}
                         <button 
@@ -359,7 +490,12 @@ export default function HRCandidates() {
                           title="Просмотреть анализ ИИ"
                           onClick={() => {
                             setSelectedAnalysis(candidate.ai_analysis)
+                            setSelectedAnalysisData(null)
                             setShowAnalysisModal(true)
+                            // Подгружаем структурированный анализ по id
+                            apiClient.getResumeAnalysis(candidate.id)
+                              .then((data) => setSelectedAnalysisData(data))
+                              .catch(() => {})
                           }}
                         >
                           <Eye size={16} />
@@ -404,7 +540,7 @@ export default function HRCandidates() {
           <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Показано 1-9 из 78
+                Показано {filteredCandidates.length} из {candidates.length}
               </p>
               <div className="flex items-center gap-2">
                 <button className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
@@ -440,8 +576,118 @@ export default function HRCandidates() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto max-h-[70vh]">
-              <div className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                {selectedAnalysis}
+              {/* Красиво оформленный анализ */}
+              <div className="space-y-4">
+                {/* Блок пользователя и позиции */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Кандидат</p>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">{selectedAnalysisData?.name || filteredCandidates.find(c => c.ai_analysis === selectedAnalysis)?.candidate_name || '—'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Позиция</p>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">{selectedAnalysisData?.position || filteredCandidates.find(c => c.ai_analysis === selectedAnalysis)?.position || '—'}</p>
+                  </div>
+                </div>
+                {/* Вердикт */}
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <p className="text-xs uppercase text-gray-500 dark:text-gray-400 mb-2">Вердикт</p>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRecommendationBadgeClasses(selectedAnalysisData?.recommendation || filteredCandidates.find(c => c.ai_analysis === selectedAnalysis)?.recommended || '—')}`}>
+                    {selectedAnalysisData?.recommendation || filteredCandidates.find(c => c.ai_analysis === selectedAnalysis)?.recommended || '—'}
+                  </span>
+                </div>
+                {/* Краткое объяснение, плюсы и минусы из текста */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400 mb-2">Почему такой вердикт</p>
+                    {selectedAnalysisData ? (
+                      <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                        {selectedAnalysisData?.match_score && (
+                          <p><span className="text-gray-500">Соответствие:</span> {selectedAnalysisData.match_score}</p>
+                        )}
+                        {selectedAnalysisData?.education && (
+                          <p><span className="text-gray-500">Образование:</span> {selectedAnalysisData.education}</p>
+                        )}
+                        {selectedAnalysisData?.experience && (
+                          <p><span className="text-gray-500">Опыт:</span> {selectedAnalysisData.experience}</p>
+                        )}
+                        {Array.isArray(selectedAnalysisData?.key_skills) && selectedAnalysisData.key_skills.length > 0 && (
+                          <p><span className="text-gray-500">Ключевые навыки:</span> {selectedAnalysisData.key_skills.slice(0,6).join(', ')}</p>
+                        )}
+                        {selectedAnalysisData?.brief_reason && (
+                          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">Краткое объяснение вердикта</p>
+                            <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">{selectedAnalysisData.brief_reason}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{selectedAnalysis || '—'}</p>
+                    )}
+                  </div>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <p className="text-xs uppercase text-gray-500 dark:text-gray-400 mb-2">Сильные стороны</p>
+                      {Array.isArray(selectedAnalysisData?.strengths) && selectedAnalysisData.strengths.length > 0 ? (
+                        <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                          {selectedAnalysisData.strengths
+                            .map((item: string) => sanitizeListItem(item))
+                            .filter((item: string) => item.length > 0)
+                            .slice(0, 6)
+                            .map((s: string, i: number) => (
+                            <li key={i}>{s}</li>
+                          ))}
+                        </ul>
+                      ) : Array.isArray(selectedAnalysisData?.achievements) && selectedAnalysisData.achievements.length > 0 ? (
+                        <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                          {selectedAnalysisData.achievements
+                            .map((item: string) => sanitizeListItem(item))
+                            .filter((item: string) => item.length > 0)
+                            .slice(0, 6)
+                            .map((s: string, i: number) => (
+                            <li key={i}>{s}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                          {(selectedAnalysis || '').split('\n').filter(l => l.trim().startsWith('•')).slice(0, 5).map((l, i) => (
+                            <li key={i}>{sanitizeListItem(l.replace(/^•\s?/, ''))}</li>
+                          )).filter((item: string) => item.length > 0)}
+                        </ul>
+                      )}
+                    </div>
+                    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <p className="text-xs uppercase text-gray-500 dark:text-gray-400 mb-2">Слабые стороны</p>
+                      {Array.isArray(selectedAnalysisData?.weaknesses) && selectedAnalysisData.weaknesses.length > 0 ? (
+                        <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                          {selectedAnalysisData.weaknesses
+                            .map((item: string) => sanitizeListItem(item))
+                            .filter((item: string) => item.length > 0)
+                            .slice(0, 6)
+                            .map((w: string, i: number) => (
+                            <li key={i}>{w}</li>
+                          ))}
+                        </ul>
+                      ) : Array.isArray(selectedAnalysisData?.missing_skills) && selectedAnalysisData.missing_skills.length > 0 ? (
+                        <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                          {selectedAnalysisData.missing_skills
+                            .map((item: string) => sanitizeListItem(item))
+                            .filter((item: string) => item.length > 0)
+                            .slice(0, 6)
+                            .map((w: string, i: number) => (
+                            <li key={i}>{w}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                          {(selectedAnalysis || '').split('\n').filter(l => l.toLowerCase().includes('слаб') || l.toLowerCase().includes('нет')).slice(0, 5).map((l, i) => (
+                            <li key={i}>{sanitizeListItem(l.replace(/^•\s?/, ''))}</li>
+                          )).filter((item: string) => item.length > 0)}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -478,7 +724,6 @@ export default function HRCandidates() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="pending">Ожидает рассмотрения</option>
-                  <option value="reviewed">Рассмотрена</option>
                   <option value="interview_scheduled">Интервью назначено</option>
                   <option value="interview_completed">Интервью пройдено</option>
                   <option value="accepted">Принята</option>

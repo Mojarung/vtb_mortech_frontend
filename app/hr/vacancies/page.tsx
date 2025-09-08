@@ -1,12 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Search, Filter, MapPin, Clock, DollarSign, Users, Plus, Edit, Trash2, Eye } from 'lucide-react'
+import { Search, Filter, MapPin, Clock, DollarSign, Users, Plus, Edit, Trash2, Eye, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { apiClient } from '../../../lib/api'
 import Notification from '../../../components/Notification'
+import { useAuth } from '../../../contexts/AuthContext'
 
 export default function HRVacancies() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -23,6 +24,11 @@ export default function HRVacancies() {
   const [loading, setLoading] = useState(true)
   const [filteredVacancies, setFilteredVacancies] = useState<any[]>([])
   const [notifications, setNotifications] = useState<any[]>([])
+  const [selectedVacancy, setSelectedVacancy] = useState<any | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [editingVacancy, setEditingVacancy] = useState<any | null>(null)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const { user } = useAuth()
 
   const addNotification = (message: string, type: 'success' | 'error' | 'warning') => {
     const id = Date.now().toString()
@@ -152,7 +158,8 @@ export default function HRVacancies() {
         location: '',
         employment_type: '',
         experience_level: '',
-        benefits: ''
+        benefits: '',
+        company: ''
       })
       setShowCreateForm(false)
       
@@ -181,6 +188,53 @@ export default function HRVacancies() {
         addNotification('Ошибка при удалении вакансии. Попробуйте позже.', 'error')
       }
     }
+  }
+
+  const handleViewDetails = (vacancy: any) => {
+    setSelectedVacancy(vacancy)
+    setShowDetailsModal(true)
+  }
+
+  const handleEditVacancy = (vacancy: any) => {
+    setEditingVacancy(vacancy)
+    setShowEditForm(true)
+  }
+
+  const handleUpdateVacancy = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingVacancy) return
+
+    try {
+      const updateData = {
+        ...editingVacancy,
+        salary_from: editingVacancy.salary_from ? parseInt(editingVacancy.salary_from) : null,
+        salary_to: editingVacancy.salary_to ? parseInt(editingVacancy.salary_to) : null
+      }
+
+      await apiClient.updateVacancy(editingVacancy.id, updateData)
+      
+      // Обновляем список вакансий
+      const data = await apiClient.getVacancies()
+      setVacancies(data)
+      setFilteredVacancies(data)
+      
+      setEditingVacancy(null)
+      setShowEditForm(false)
+      addNotification('Вакансия обновлена!', 'success')
+    } catch (error) {
+      console.error('Error updating vacancy:', error)
+      addNotification('Ошибка при обновлении вакансии', 'error')
+    }
+  }
+
+  const canEditVacancy = (vacancy: any) => {
+    console.log('🔍 Checking edit permissions:', {
+      userId: user?.id,
+      vacancyCreatorId: vacancy?.creator_id,
+      canEdit: user?.id && vacancy?.creator_id && vacancy.creator_id === user.id,
+      vacancy: vacancy
+    })
+    return user?.id && vacancy?.creator_id && vacancy.creator_id === user.id
   }
 
   return (
@@ -475,18 +529,31 @@ export default function HRVacancies() {
                     </p>
                   </div>
                   <div className="flex gap-1">
-                    <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 transition-colors">
+                    <button 
+                      onClick={() => handleViewDetails(vacancy)}
+                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 transition-colors"
+                      title="Просмотреть детали"
+                    >
                       <Eye size={18} />
                     </button>
-                    <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-green-600 transition-colors">
-                      <Edit size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteVacancy(vacancy.id)}
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-600 transition-colors"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {canEditVacancy(vacancy) && (
+                      <>
+                        <button 
+                          onClick={() => handleEditVacancy(vacancy)}
+                          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-green-600 transition-colors"
+                          title="Редактировать"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteVacancy(vacancy.id)}
+                          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-600 transition-colors"
+                          title="Удалить"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -543,7 +610,7 @@ export default function HRVacancies() {
 
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Опубликовано: {vacancy.postedDate || '—'}
+                    Опубликовано: {vacancy.postedDate ? new Date(vacancy.postedDate).toLocaleDateString('ru-RU') : vacancy.created_at ? new Date(vacancy.created_at).toLocaleDateString('ru-RU') : '—'}
                   </div>
                 </div>
               </motion.div>
@@ -570,6 +637,268 @@ export default function HRVacancies() {
           )}
         </div>
       </div>
+
+      {/* Модальное окно для деталей вакансии */}
+      {showDetailsModal && selectedVacancy && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {selectedVacancy.title}
+              </h2>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              <div className="space-y-6">
+                {/* Основная информация */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Компания</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{selectedVacancy.company || 'Не указана'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Локация</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{selectedVacancy.location || 'Не указана'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Зарплата</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatSalary(selectedVacancy)}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Опыт</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{getExperience(selectedVacancy)}</p>
+                  </div>
+                </div>
+
+                {/* Описание */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Описание</h3>
+                  <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedVacancy.description}</p>
+                  </div>
+                </div>
+
+                {/* Требования */}
+                {Array.isArray(selectedVacancy.requirements) && selectedVacancy.requirements.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Требования</h3>
+                    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                        {selectedVacancy.requirements.map((req: string, idx: number) => (
+                          <li key={idx}>{req}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* Условия работы */}
+                {Array.isArray(selectedVacancy.benefits) && selectedVacancy.benefits.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Условия работы</h3>
+                    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                        {selectedVacancy.benefits.map((benefit: string, idx: number) => (
+                          <li key={idx}>{benefit}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* Дополнительная информация */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Тип занятости</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{getEmployment(selectedVacancy)}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Дата создания</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {selectedVacancy.postedDate ? new Date(selectedVacancy.postedDate).toLocaleDateString('ru-RU', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : selectedVacancy.created_at ? new Date(selectedVacancy.created_at).toLocaleDateString('ru-RU', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : 'Не указана'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Модальное окно для редактирования вакансии */}
+      {showEditForm && editingVacancy && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Редактировать вакансию
+              </h2>
+              <button
+                onClick={() => setShowEditForm(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              <form onSubmit={handleUpdateVacancy} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Название вакансии *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editingVacancy.title || ''}
+                      onChange={(e) => setEditingVacancy({...editingVacancy, title: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Компания *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editingVacancy.company || ''}
+                      onChange={(e) => setEditingVacancy({...editingVacancy, company: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Локация
+                    </label>
+                    <input
+                      type="text"
+                      value={editingVacancy.location || ''}
+                      onChange={(e) => setEditingVacancy({...editingVacancy, location: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Описание *
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={editingVacancy.description || ''}
+                    onChange={(e) => setEditingVacancy({...editingVacancy, description: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Требования
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editingVacancy.requirements || ''}
+                    onChange={(e) => setEditingVacancy({...editingVacancy, requirements: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Условия работы
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editingVacancy.benefits || ''}
+                    onChange={(e) => setEditingVacancy({...editingVacancy, benefits: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Зарплата от
+                    </label>
+                    <input
+                      type="number"
+                      value={editingVacancy.salary_from || ''}
+                      onChange={(e) => setEditingVacancy({...editingVacancy, salary_from: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Зарплата до
+                    </label>
+                    <input
+                      type="number"
+                      value={editingVacancy.salary_to || ''}
+                      onChange={(e) => setEditingVacancy({...editingVacancy, salary_to: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Опыт работы
+                    </label>
+                    <select
+                      value={editingVacancy.experience_level || ''}
+                      onChange={(e) => setEditingVacancy({...editingVacancy, experience_level: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Выберите опыт</option>
+                      <option value="Без опыта">Без опыта</option>
+                      <option value="1-3 года">1-3 года</option>
+                      <option value="3-5 лет">3-5 лет</option>
+                      <option value="5+ лет">5+ лет</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Сохранить изменения
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditForm(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Уведомления */}
       {notifications.map((notification) => (
