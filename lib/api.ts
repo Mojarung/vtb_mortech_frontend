@@ -1,5 +1,5 @@
 // Продакшн конфигурация
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mojarung-vtb-mortech-backend-ef3c.twc1.net';
+const API_BASE_URL = 'https://mojarung-vtb-mortech-backend-ef3c.twc1.net';
 
 console.log('🌐 API Configuration:', { API_BASE_URL });
 
@@ -83,8 +83,20 @@ class ApiClient {
   private baseURL: string;
 
   constructor(baseURL: string) {
-    // Точное копирование базового URL без преобразований
-    this.baseURL = baseURL;
+    // Нормализуем базовый URL: принудительно HTTPS и без завершающего слэша
+    try {
+      const parsed = new URL(baseURL);
+      if (parsed.protocol === 'http:') {
+        parsed.protocol = 'https:';
+        console.warn('⚠️ API Client: Протокол http заменён на https для baseURL:', baseURL);
+      }
+      this.baseURL = parsed.origin;
+    } catch {
+      // Fallback для случаев, когда baseURL не является валидным URL
+      this.baseURL = baseURL
+        .replace(/^http:\/\//i, 'https://')
+        .replace(/\/+$/g, '');
+    }
     console.log('🌐 API Client: Base URL is', this.baseURL);
   }
 
@@ -124,13 +136,20 @@ class ApiClient {
       const response = await fetch(url, config);
       
       console.log('🌐 API Client: Response status:', response.status);
-      console.log('🌐 API Client: Response headers:', Object.fromEntries(response.headers.entries()));
+      const responseHeaders: Record<string, string> = {};
+      response.headers.forEach((value, key) => {
+        responseHeaders[key] = value;
+      });
+      console.log('🌐 API Client: Response headers:', responseHeaders);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API Client: Full error response:', errorText);
-        
-        const errorData = await response.json().catch(() => ({}));
+        let errorData: any = {};
+        try {
+          errorData = await response.json();
+        } catch {
+          const text = await response.text().catch(() => '');
+          errorData = { detail: text || 'Unknown error' };
+        }
         console.error('❌ API Client: Request failed:', {
           status: response.status,
           statusText: response.statusText,
