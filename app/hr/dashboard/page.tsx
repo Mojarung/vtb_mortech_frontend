@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Users, Package, TrendingUp, Clock, ArrowUp, ArrowDown } from 'lucide-react'
+import { Users, Package, TrendingUp, Clock } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
@@ -76,32 +76,24 @@ export default function HRDashboard() {
     {
       title: 'Всего кандидатов',
       value: (stats?.totalCandidates || 0).toString(),
-      change: '+8.5%',
-      changeType: 'up',
       icon: Users,
       color: 'bg-blue-500'
     },
     {
       title: 'Всего интервью',
       value: (stats?.totalInterviews || 0).toString(),
-      change: '+1.3%',
-      changeType: 'up',
       icon: Package,
       color: 'bg-yellow-500'
     },
     {
       title: 'Успешных найма',
       value: (stats?.successfulHires || 0).toString(),
-      change: '-4.3%',
-      changeType: 'down',
       icon: TrendingUp,
       color: 'bg-green-500'
     },
     {
       title: 'Ожидающих',
       value: (stats?.pending || 0).toString(),
-      change: '+1.8%',
-      changeType: 'up',
       icon: Clock,
       color: 'bg-orange-500'
     }
@@ -140,21 +132,12 @@ export default function HRDashboard() {
                 <div className={`p-3 rounded-xl ${stat.color}`}>
                   <stat.icon className="text-white" size={24} />
                 </div>
-                <div className={`flex items-center text-sm font-medium ${
-                  stat.changeType === 'up' ? 'text-green-500' : 'text-red-500'
-                }`}>
-                  {stat.changeType === 'up' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-                  {stat.change}
-                </div>
               </div>
               <h3 className="text-gray-600 dark:text-gray-400 text-sm mb-1">
                 {stat.title}
               </h3>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {stat.value}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                {stat.changeType === 'up' ? 'Рост с' : 'Снижение с'} прошлого месяца
               </p>
             </motion.div>
           ))}

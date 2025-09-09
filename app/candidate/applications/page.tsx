@@ -30,52 +30,7 @@ export default function CandidateApplications() {
     fetchApplications()
   }, [])
 
-  const mockApplications = [
-    {
-      id: 1,
-      company: 'TechCorp',
-      position: 'Frontend Developer',
-      appliedDate: '2024-01-15',
-      status: 'interview',
-      statusColor: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      salary: '150,000 - 200,000 ₽',
-      location: 'Москва',
-      description: 'Разработка современных веб-приложений на React и TypeScript'
-    },
-    {
-      id: 2,
-      company: 'StartupXYZ',
-      position: 'React Developer',
-      appliedDate: '2024-01-12',
-      status: 'pending',
-      statusColor: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      salary: '120,000 - 160,000 ₽',
-      location: 'Удаленно',
-      description: 'Создание пользовательских интерфейсов для мобильных и веб-приложений'
-    },
-    {
-      id: 3,
-      company: 'DevStudio',
-      position: 'Full Stack Developer',
-      appliedDate: '2024-01-10',
-      status: 'accepted',
-      statusColor: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      salary: '180,000 - 220,000 ₽',
-      location: 'Санкт-Петербург',
-      description: 'Полноценная разработка веб-приложений от фронтенда до бэкенда'
-    },
-    {
-      id: 4,
-      company: 'WebAgency',
-      position: 'Frontend Developer',
-      appliedDate: '2024-01-08',
-      status: 'rejected',
-      statusColor: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-      salary: '100,000 - 140,000 ₽',
-      location: 'Москва',
-      description: 'Разработка корпоративных сайтов и лендингов'
-    }
-  ]
+  
 
   const getStatusText = (status: string) => {
     switch (status) {

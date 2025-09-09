@@ -142,8 +142,7 @@ export default function HRCandidates() {
         })
         // Маппим базовые данные
         const baseMapped = onlyMineAndProcessed.map((r: any) => {
-          const nameFromNotes = extractFromNotes(r?.notes, '• Имя')
-          const fullNameCandidate = r?.analysis?.name || nameFromNotes || r?.user?.full_name || [r?.user?.first_name, r?.user?.last_name].filter(Boolean).join(' ').trim() || r?.user?.username || '—'
+          const fullNameCandidate = r?.user?.full_name || [r?.user?.first_name, r?.user?.last_name].filter(Boolean).join(' ').trim() || r?.user?.username || '—'
           const position = r?.vacancy?.title || extractFromNotes(r?.notes, '• Позиция') || '—'
           const date = r?.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString() : '—'
           const rec = r?.analysis?.recommendation || extractFromNotes(r?.notes, '🎯 РЕКОМЕНДАЦИЯ') || extractRecommendation(r?.notes)
@@ -163,15 +162,13 @@ export default function HRCandidates() {
 
         // Подгружаем анализы с бэка для каждого резюме (если нет analysis/notes)
         const withAnalysis = await Promise.all(baseMapped.map(async (item: any) => {
-          if (item.recommended !== '—' && item.candidate_name !== '—' && item.ai_analysis) return item
+          if (item.recommended !== '—' && item.ai_analysis) return item
           try {
             const analysis = await apiClient.getResumeAnalysis(item.id)
-            const name = analysis?.name || item.candidate_name
             const recommendation = analysis?.recommendation || item.recommended
             const aiText = analysis ? JSON.stringify(analysis, null, 2) : item.ai_analysis
             return {
               ...item,
-              candidate_name: name || item.candidate_name,
               recommended: recommendation || item.recommended,
               ai_analysis: aiText || item.ai_analysis
             }
@@ -257,58 +254,7 @@ export default function HRCandidates() {
     }
   }
 
-  const mockCandidates = [
-    {
-      id: '00001',
-      name: 'Кристина Брукс',
-      position: 'Frontend Developer',
-      address: '089 Kutch Green Apt. 448',
-      date: '04 Sep 2019',
-      type: 'Техническое',
-      status: 'Завершено',
-      statusColor: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    },
-    {
-      id: '00002',
-      name: 'Роза Пирсон',
-      position: 'Backend Developer',
-      address: '979 Immanuel Ferry Suite 526',
-      date: '28 May 2019',
-      type: 'HR',
-      status: 'В процессе',
-      statusColor: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-    },
-    {
-      id: '00003',
-      name: 'Даррелл Колдуэлл',
-      position: 'DevOps Engineer',
-      address: '8587 Frida Ports',
-      date: '23 Nov 2019',
-      type: 'Техническое',
-      status: 'Отклонено',
-      statusColor: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    },
-    {
-      id: '00004',
-      name: 'Гилберт Джонсон',
-      position: 'UI/UX Designer',
-      address: '768 Destiny Lake Suite 600',
-      date: '05 Feb 2019',
-      type: 'Креативное',
-      status: 'Завершено',
-      statusColor: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    },
-    {
-      id: '00005',
-      name: 'Алан Кейн',
-      position: 'Product Manager',
-      address: '042 Mylene Throughway',
-      date: '29 Jul 2019',
-      type: 'Управленческое',
-      status: 'В процессе',
-      statusColor: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-    }
-  ]
+  
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">

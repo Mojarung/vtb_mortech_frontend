@@ -41,6 +41,48 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface Interview {
+  id: number;
+  vacancy_id: number;
+  resume_id: number;
+  status: 'not_started' | 'in_progress' | 'completed';
+  scheduled_date?: string;
+  start_date?: string;
+  end_date?: string;
+  duration_minutes?: number;
+  dialogue?: any;
+  summary?: string;
+  pass_percentage?: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // Дополнительные поля для отображения
+  candidate_name?: string;
+  position?: string;
+  interviewer?: string;
+  vacancy?: any;
+  resume?: any;
+}
+
+export interface InterviewCreate {
+  vacancy_id: number;
+  resume_id: number;
+  scheduled_date: string;
+  notes?: string;
+}
+
+export interface InterviewUpdate {
+  status?: 'not_started' | 'in_progress' | 'completed';
+  scheduled_date?: string;
+  start_date?: string;
+  end_date?: string;
+  duration_minutes?: number;
+  dialogue?: any;
+  summary?: string;
+  pass_percentage?: number;
+  notes?: string;
+}
+
 export interface RegisterRequest {
   username: string;
   email: string;
@@ -215,6 +257,39 @@ class ApiClient {
 
   async getHRInterviews(): Promise<any> {
     return this.request<any>('/analytics/hr/interviews');
+  }
+
+  // Методы для интервью
+  async getInterviews(): Promise<Interview[]> {
+    return this.request<Interview[]>('/interviews');
+  }
+
+  async getInterview(id: number): Promise<Interview> {
+    return this.request<Interview>(`/interviews/${id}`);
+  }
+
+  async createInterview(interview: InterviewCreate): Promise<Interview> {
+    return this.request<Interview>('/interviews', {
+      method: 'POST',
+      body: JSON.stringify(interview),
+    });
+  }
+
+  async updateInterview(id: number, interview: InterviewUpdate): Promise<Interview> {
+    return this.request<Interview>(`/interviews/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(interview),
+    });
+  }
+
+  async deleteInterview(id: number): Promise<void> {
+    return this.request<void>(`/interviews/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getInterviewsByVacancy(vacancyId: number): Promise<Interview[]> {
+    return this.request<Interview[]>(`/interviews/vacancy/${vacancyId}`);
   }
 
   // Методы для вакансий
