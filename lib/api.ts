@@ -1,5 +1,7 @@
 // Продакшн конфигурация
-const API_BASE_URL = 'https://mojarung-vtb-mortech-backend-ef3c.twc1.net';
+// Позволяем переопределять базовый URL через переменную окружения в Next.js
+// В сборке Next переменные, начинающиеся с NEXT_PUBLIC_, попадают на клиент
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://mojarung-vtb-mortech-backend-ef3c.twc1.net';
 
 console.log('🌐 API Configuration:', { API_BASE_URL });
 
