@@ -60,7 +60,12 @@ export default function HRSettings() {
   const handleSaveProfile = async () => {
     try {
       setSaving(true)
-      await apiClient.updateProfile(profile)
+      // Отправляем только поддерживаемые бекендом поля в snake_case
+      await apiClient.updateProfile({
+        first_name: profile.firstName,
+        last_name: profile.lastName,
+        // email и position могут обновляться через отдельные эндпоинты, поэтому не шлём их здесь
+      })
       addNotification('Профиль успешно обновлен!', 'success')
     } catch (error) {
       console.error('Error updating profile:', error)

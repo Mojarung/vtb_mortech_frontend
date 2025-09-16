@@ -69,7 +69,14 @@ export default function CandidateSettings() {
   const handleSaveProfile = async () => {
     try {
       setSaving(true)
-      await apiClient.updateProfile(profile)
+      // Преобразуем camelCase из UI в snake_case, ожидаемый бекендом
+      await apiClient.updateProfile({
+        preferred_position: profile.preferredPosition,
+        min_salary: profile.minSalary ? Number(profile.minSalary) : undefined,
+        max_salary: profile.maxSalary ? Number(profile.maxSalary) : undefined,
+        relocation: profile.relocation,
+        employment_types: profile.employmentTypes,
+      })
       addNotification('Профиль успешно обновлен!', 'success')
     } catch (error) {
       console.error('Error updating profile:', error)

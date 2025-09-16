@@ -11,6 +11,7 @@ export interface User {
   email: string;
   role: 'hr' | 'user';
   full_name?: string;
+  position?: string;
   is_active: boolean;
   created_at: string;
   // Profile fields
@@ -36,6 +37,12 @@ export interface User {
     period: string;
     description: string;
   }>;
+  // Дополнительные поля, используемые в настройках кандидата
+  preferred_position?: string;
+  min_salary?: number;
+  max_salary?: number;
+  relocation?: string;
+  employment_types?: string[];
 }
 
 export interface LoginRequest {
@@ -121,6 +128,16 @@ export interface ProfileUpdateRequest {
     period: string;
     description: string;
   }>;
+  preferred_position?: string;
+  min_salary?: number;
+  max_salary?: number;
+  relocation?: string;
+  employment_types?: string[];
+  preferred_position_snake?: string;
+  min_salary_snake?: number;
+  max_salary_snake?: number;
+  relocation_snake?: string;
+  employment_types_snake?: string[];
 }
 
 class ApiClient {

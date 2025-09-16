@@ -591,14 +591,20 @@ export default function HRCandidates() {
                             .filter((item: string) => item.length > 0)
                             .slice(0, 6)
                             .map((s: string, i: number) => (
-                            <li key={i}>{s}</li>
+                            <li key={i}>{sanitizeListItem(s)}</li>
                           ))}
                         </ul>
                       ) : (
                         <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                          {(selectedAnalysis || '').split('\n').filter(l => l.trim().startsWith('•')).slice(0, 5).map((l, i) => (
-                            <li key={i}>{sanitizeListItem(l.replace(/^•\s?/, ''))}</li>
-                          )).filter((item: string) => item.length > 0)}
+                          {(selectedAnalysis || '')
+                            .split('\n')
+                            .filter(l => l.trim().startsWith('•'))
+                            .map(l => sanitizeListItem(l.replace(/^•\s?/, '')))
+                            .filter((s: string) => s.length > 0)
+                            .slice(0, 5)
+                            .map((s: string, i: number) => (
+                              <li key={i}>{s}</li>
+                            ))}
                         </ul>
                       )}
                     </div>
@@ -607,28 +613,30 @@ export default function HRCandidates() {
                       {Array.isArray(selectedAnalysisData?.weaknesses) && selectedAnalysisData.weaknesses.length > 0 ? (
                         <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
                           {selectedAnalysisData.weaknesses
-                            .map((item: string) => sanitizeListItem(item))
-                            .filter((item: string) => item.length > 0)
-                            .slice(0, 6)
+                            .filter((w: string) => w.length > 0)
                             .map((w: string, i: number) => (
-                            <li key={i}>{w}</li>
+                            <li key={i}>{sanitizeListItem(w)}</li>
                           ))}
                         </ul>
                       ) : Array.isArray(selectedAnalysisData?.missing_skills) && selectedAnalysisData.missing_skills.length > 0 ? (
                         <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
                           {selectedAnalysisData.missing_skills
-                            .map((item: string) => sanitizeListItem(item))
-                            .filter((item: string) => item.length > 0)
-                            .slice(0, 6)
+                            .filter((w: string) => w.length > 0)
                             .map((w: string, i: number) => (
-                            <li key={i}>{w}</li>
+                            <li key={i}>{sanitizeListItem(w)}</li>
                           ))}
                         </ul>
                       ) : (
                         <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                          {(selectedAnalysis || '').split('\n').filter(l => l.toLowerCase().includes('слаб') || l.toLowerCase().includes('нет')).slice(0, 5).map((l, i) => (
-                            <li key={i}>{sanitizeListItem(l.replace(/^•\s?/, ''))}</li>
-                          )).filter((item: string) => item.length > 0)}
+                          {(selectedAnalysis || '')
+                            .split('\n')
+                            .filter(l => l.toLowerCase().includes('слаб') || l.toLowerCase().includes('нет'))
+                            .map(l => sanitizeListItem(l.replace(/^•\s?/, '')))
+                            .filter((s: string) => s.length > 0)
+                            .slice(0, 5)
+                            .map((s: string, i: number) => (
+                              <li key={i}>{s}</li>
+                            ))}
                         </ul>
                       )}
                     </div>
