@@ -1,381 +1,248 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, Mic, MicOff, Video, VideoOff, Clock, Brain, CheckCircle, AlertCircle } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import Sidebar from '../../../components/Sidebar'
-import DashboardHeader from '../../../components/DashboardHeader'
+import { Mic, MicOff, Phone, PhoneOff, Video, VideoOff, Settings, MessageSquare } from 'lucide-react'
 
-export default function AIInterview() {
-  const [isRecording, setIsRecording] = useState(false)
-  const [isVideoOn, setIsVideoOn] = useState(true)
-  const [isMicOn, setIsMicOn] = useState(true)
-  const [currentQuestion, setCurrentQuestion] = useState(1)
-  const [timeRemaining, setTimeRemaining] = useState(1800) // 30 minutes
-  const [interviewStarted, setInterviewStarted] = useState(false)
-  const [currentAnswer, setCurrentAnswer] = useState('')
-
-  const questions = [
-    {
-      id: 1,
-      text: "Расскажите о себе и своем опыте работы в области разработки",
-      category: "Общие вопросы",
-      timeLimit: 180
-    },
-    {
-      id: 2,
-      text: "Какие технологии вы используете для frontend разработки?",
-      category: "Технические навыки",
-      timeLimit: 120
-    },
-    {
-      id: 3,
-      text: "Опишите сложный проект, над которым вы работали",
-      category: "Опыт работы",
-      timeLimit: 240
-    },
-    {
-      id: 4,
-      text: "Как вы решаете конфликты в команде?",
-      category: "Soft Skills",
-      timeLimit: 150
-    }
-  ]
-
-  const interviewProgress = {
-    questionsAnswered: currentQuestion - 1,
-    totalQuestions: questions.length,
-    currentScore: 78,
-    timeSpent: 900 // 15 minutes
-  }
+export default function AIInterviewPage() {
+  const [isConnected, setIsConnected] = useState(false)
+  const [isMicrophoneMuted, setIsMicrophoneMuted] = useState(false)
+  const [isVideoOff, setIsVideoOff] = useState(false)
+  const [status, setStatus] = useState('AI бот: Подключение...')
+  const [currentTime, setCurrentTime] = useState('00:00')
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null)
 
   useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (interviewStarted && timeRemaining > 0) {
-      interval = setInterval(() => {
-        setTimeRemaining((prev) => prev - 1)
-      }, 1000)
+    const timer = setInterval(() => {
+      const now = new Date()
+      const minutes = now.getMinutes().toString().padStart(2, '0')
+      const seconds = now.getSeconds().toString().padStart(2, '0')
+      setCurrentTime(`${minutes}:${seconds}`)
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  const waitForIceGatheringComplete = async (pc: RTCPeerConnection, timeoutMs = 2000) => {
+    if (pc.iceGatheringState === 'complete') return
+    return new Promise<void>((resolve) => {
+      let timeoutId: NodeJS.Timeout
+      const checkState = () => {
+        if (pc.iceGatheringState === 'complete') {
+          cleanup()
+          resolve()
+        }
+      }
+      const onTimeout = () => {
+        console.warn(`ICE gathering timed out after ${timeoutMs} ms.`)
+        cleanup()
+        resolve()
+      }
+      const cleanup = () => {
+        pc.removeEventListener('icegatheringstatechange', checkState)
+        clearTimeout(timeoutId)
+      }
+      pc.addEventListener('icegatheringstatechange', checkState)
+      timeoutId = setTimeout(onTimeout, timeoutMs)
+      checkState()
+    })
+  }
+
+  const createWebRTCConnection = async () => {
+    const config: RTCConfiguration = {
+      iceServers: [],
     }
-    return () => clearInterval(interval)
-  }, [interviewStarted, timeRemaining])
+    const pc = new RTCPeerConnection(config)
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
+    pc.ontrack = (event) => {
+      if (audioRef.current) {
+        audioRef.current.srcObject = event.streams[0]
+      }
+    }
 
-  const handleStartInterview = () => {
-    setInterviewStarted(true)
-    setIsRecording(true)
-  }
+    pc.oniceconnectionstatechange = () => {
+      switch (pc.iceConnectionState) {
+        case 'connected':
+          setStatus('AI бот: Подключено')
+          setIsConnected(true)
+          break
+        case 'disconnected':
+        case 'failed':
+          setStatus('AI бот: Отключено')
+          setIsConnected(false)
+          break
+      }
+    }
 
-  const handleNextQuestion = () => {
-    if (currentQuestion < questions.length) {
-      setCurrentQuestion(currentQuestion + 1)
-      setCurrentAnswer('')
+    try {
+      const audioStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: true, 
+        video: !isVideoOff 
+      })
+      audioStream.getTracks().forEach(track => pc.addTrack(track, audioStream))
+
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+      await waitForIceGatheringComplete(pc)
+
+      // Отправка offer на сервер
+      const response = await fetch('/api/ai-interview/offer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sdp: pc.localDescription?.sdp,
+          type: pc.localDescription?.type
+        })
+      })
+
+      const answer = await response.json()
+      await pc.setRemoteDescription(new RTCSessionDescription(answer))
+
+      peerConnectionRef.current = pc
+    } catch (error) {
+      console.error('WebRTC connection error:', error)
+      setStatus('AI бот: Ошибка подключения')
     }
   }
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestion > 1) {
-      setCurrentQuestion(currentQuestion - 1)
+  const toggleConnection = async () => {
+    if (isConnected) {
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close()
+        peerConnectionRef.current = null
+      }
+      setIsConnected(false)
+      setStatus('AI бот: Отключено')
+    } else {
+      await createWebRTCConnection()
     }
   }
 
-  const currentQ = questions[currentQuestion - 1]
+  const toggleMicrophone = () => {
+    setIsMicrophoneMuted(!isMicrophoneMuted)
+  }
+
+  const toggleVideo = () => {
+    setIsVideoOff(!isVideoOff)
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
-      <Sidebar userRole="candidate" />
-      <div className="flex-1 flex flex-col">
-        <DashboardHeader title="AI Interview" userRole="candidate" />
-        <div className="p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Интервью с ИИ-аватаром
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Пройдите интервью с ИИ-аватаром для позиции Frontend Developer
-            </p>
-          </motion.div>
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 bg-gray-900">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-300">{status}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-300">{currentTime}</div>
+          <button className="p-2 text-gray-400 hover:text-white transition-colors">
+            <MessageSquare size={20} />
+          </button>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="lg:col-span-2 space-y-6"
-            >
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Видео-интервью
-                  </h2>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm font-mono text-gray-600 dark:text-gray-400">
-                        {formatTime(timeRemaining)}
-                      </span>
-                    </div>
-                    {interviewStarted && (
-                      <span className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded-full text-xs animate-pulse">
-                        Запись
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="relative bg-gray-900 rounded-lg aspect-video mb-4 overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <Bot className="h-24 w-24 text-blue-500 mx-auto mb-4" />
-                      {!interviewStarted ? (
-                        <div>
-                          <p className="text-white text-lg mb-2">ИИ-Аватар готов к интервью</p>
-                          <p className="text-gray-300 text-sm">
-                            Нажмите "Начать интервью" когда будете готовы
-                          </p>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="text-white text-lg mb-2">Интервью в процессе</p>
-                          <p className="text-gray-300 text-sm">
-                            Слушаю ваш ответ...
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="bg-black bg-opacity-50 text-white p-3 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs bg-blue-600 px-2 py-1 rounded">
-                          {currentQ?.category}
-                        </span>
-                        <span className="text-xs text-gray-300">
-                          Вопрос {currentQuestion} из {questions.length}
-                        </span>
-                      </div>
-                      <p className="text-sm mb-2">
-                        <strong>ИИ-Аватар:</strong> "{currentQ?.text}"
-                      </p>
-                      {interviewStarted && (
-                        <div className="flex items-center gap-2 text-xs text-gray-300">
-                          <span>Рекомендуемое время: {Math.floor(currentQ?.timeLimit / 60)} мин</span>
-                          <span>•</span>
-                          <span>Текущая оценка: {interviewProgress.currentScore}%</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-center gap-4 mb-4">
-                  <button
-                    onClick={() => setIsMicOn(!isMicOn)}
-                    className={`p-3 rounded-full transition-colors ${
-                      isMicOn ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-red-500 hover:bg-red-600 text-white'
-                    }`}
-                  >
-                    {isMicOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-                  </button>
-                  <button
-                    onClick={() => setIsVideoOn(!isVideoOn)}
-                    className={`p-3 rounded-full transition-colors ${
-                      isVideoOn ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-red-500 hover:bg-red-600 text-white'
-                    }`}
-                  >
-                    {isVideoOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
-                  </button>
-                </div>
-
-                {!interviewStarted ? (
-                  <div className="text-center">
-                    <button
-                      onClick={handleStartInterview}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      Начать интервью
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex justify-center gap-2">
-                    <button
-                      onClick={handlePreviousQuestion}
-                      disabled={currentQuestion === 1}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Предыдущий
-                    </button>
-                    <button
-                      onClick={handleNextQuestion}
-                      disabled={currentQuestion === questions.length}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Следующий вопрос
-                    </button>
-                    {currentQuestion === questions.length && (
-                      <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                        Завершить интервью
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {interviewStarted && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Ваш ответ
-                  </h3>
-                  <textarea
-                    value={currentAnswer}
-                    onChange={(e) => setCurrentAnswer(e.target.value)}
-                    placeholder="Введите ваш ответ здесь или используйте голосовой ввод..."
-                    className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <div className="flex justify-between items-center mt-3">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {currentAnswer.length} символов
-                    </span>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                      Отправить ответ
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
-            >
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Прогресс интервью
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600 dark:text-gray-400">Вопросы</span>
-                      <span className="text-gray-900 dark:text-white">
-                        {interviewProgress.questionsAnswered}/{interviewProgress.totalQuestions}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full transition-all"
-                        style={{ width: `${(interviewProgress.questionsAnswered / interviewProgress.totalQuestions) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600 dark:text-gray-400">Текущая оценка</span>
-                      <span className="text-gray-900 dark:text-white">
-                        {interviewProgress.currentScore}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div
-                        className="bg-green-600 h-2 rounded-full transition-all"
-                        style={{ width: `${interviewProgress.currentScore}%` }}
-                      />
-                    </div>
-                  </div>
+      <div className="flex h-[calc(100vh-64px)]">
+        {/* Левая панель - AI HR */}
+        <div className="flex-1 relative bg-gray-800">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-48 h-48 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-4xl text-indigo-600 font-bold">AI</span>
                 </div>
               </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Список вопросов
-                </h3>
-                <div className="space-y-3">
-                  {questions.map((question, index) => (
-                    <div
-                      key={question.id}
-                      className={`p-3 rounded-lg border ${
-                        currentQuestion === question.id
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                          : index < currentQuestion - 1
-                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                          : 'border-gray-200 dark:border-gray-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        {index < currentQuestion - 1 ? (
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                        ) : currentQuestion === question.id ? (
-                          <AlertCircle className="h-4 w-4 text-blue-600" />
-                        ) : (
-                          <div className="h-4 w-4 rounded-full border-2 border-gray-300" />
-                        )}
-                        <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                          {question.category}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-900 dark:text-white">
-                        {question.text}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Рекомендуемое время: {Math.floor(question.timeLimit / 60)} мин
-                      </p>
-                    </div>
-                  ))}
-                </div>
+              <h2 className="text-2xl font-semibold text-white mb-2">AI HR Интервьюер</h2>
+              <p className="text-gray-400">Альберт Храмов • Backend Developer</p>
+            </div>
+          </div>
+          
+          {/* Участники */}
+          <div className="absolute bottom-4 left-4">
+            <div className="flex items-center gap-2 bg-black bg-opacity-50 rounded-full px-4 py-2">
+              <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
+                <span className="text-xs text-white">👥</span>
               </div>
+              <span className="text-sm text-white">2 участника</span>
+            </div>
+          </div>
+        </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Советы для интервью
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Brain className="h-5 w-5 text-blue-500 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        Будьте конкретными
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Приводите конкретные примеры из вашего опыта
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        Структурируйте ответы
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Используйте методику STAR для поведенческих вопросов
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Clock className="h-5 w-5 text-orange-500 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        Следите за временем
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Старайтесь укладываться в рекомендуемое время
-                      </p>
-                    </div>
+        {/* Правая панель - Кандидат */}
+        <div className="flex-1 relative bg-gray-700">
+          <div className="absolute inset-0 flex items-center justify-center">
+            {isVideoOff ? (
+              <div className="text-center">
+                <div className="w-32 h-32 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <VideoOff className="text-gray-400" size={48} />
+                </div>
+                <p className="text-gray-400">Камера выключена</p>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="w-48 h-48 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                  <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-4xl text-blue-600 font-bold">Вы</span>
                   </div>
                 </div>
+                <h2 className="text-2xl font-semibold text-white mb-2">Кандидат</h2>
+                <p className="text-gray-400">В процессе интервью</p>
               </div>
-            </motion.div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Панель управления */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-4 bg-gray-900 bg-opacity-95 backdrop-blur-sm rounded-2xl px-8 py-4 shadow-2xl border border-gray-700"
+        >
+          <button className="p-3 bg-gray-700 hover:bg-gray-600 rounded-full transition-colors">
+            <Settings className="text-white" size={20} />
+          </button>
+          
+          <button
+            onClick={toggleMicrophone}
+            className={`p-3 rounded-full transition-colors ${
+              isMicrophoneMuted 
+                ? 'bg-red-500 hover:bg-red-600' 
+                : 'bg-gray-700 hover:bg-gray-600'
+            }`}
+          >
+            {isMicrophoneMuted ? <MicOff className="text-white" size={20} /> : <Mic className="text-white" size={20} />}
+          </button>
+
+          <button
+            onClick={toggleVideo}
+            className={`p-3 rounded-full transition-colors ${
+              isVideoOff 
+                ? 'bg-red-500 hover:bg-red-600' 
+                : 'bg-gray-700 hover:bg-gray-600'
+            }`}
+          >
+            {isVideoOff ? <VideoOff className="text-white" size={20} /> : <Video className="text-white" size={20} />}
+          </button>
+
+          <button 
+            onClick={toggleConnection}
+            className={`px-6 py-3 rounded-full font-medium transition-colors ${
+              isConnected 
+                ? 'bg-red-500 hover:bg-red-600 text-white' 
+                : 'bg-purple-600 hover:bg-purple-700 text-white'
+            }`}
+          >
+            {isConnected ? 'Завершить' : 'Подключение...'}
+          </button>
+        </motion.div>
+      </div>
+
+      <audio ref={audioRef} autoPlay hidden />
     </div>
   )
 }

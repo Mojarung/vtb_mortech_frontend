@@ -1,222 +1,264 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Video, Mic, MicOff, VideoOff, PhoneOff, MessageSquare, Settings } from 'lucide-react'
-import { useState } from 'react'
+import { Building, Calendar, Clock, Eye, MessageSquare, Video } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Sidebar from '../../../components/Sidebar'
+import DashboardHeader from '../../../components/DashboardHeader'
+import { apiClient } from '../../../lib/api'
 
-export default function CandidateInterview() {
-  const [isMuted, setIsMuted] = useState(false)
-  const [isVideoOff, setIsVideoOff] = useState(false)
-  const [currentQuestion, setCurrentQuestion] = useState(1)
+export default function CandidateApplications() {
+  const router = useRouter()
+  const [filter, setFilter] = useState('all')
+  const [applications, setApplications] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const questions = [
-    {
-      id: 1,
-      text: "Расскажите о себе и своем опыте работы с React",
-      timeLimit: 300
-    },
-    {
-      id: 2,
-      text: "Как бы вы оптимизировали производительность React приложения?",
-      timeLimit: 600
-    },
-    {
-      id: 3,
-      text: "Объясните разницу между useState и useEffect",
-      timeLimit: 400
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true)
+        const data = await apiClient.getApplications()
+        setApplications(data)
+      } catch (error) {
+        console.error('Error fetching applications:', error)
+        // Fallback to empty array if API fails
+        setApplications([])
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchApplications()
+  }, [])
+
+  const navigateToAIInterview = () => {
+    router.push('/candidate/ai-interview')
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'На рассмотрении'
+      case 'interview_scheduled':
+        return 'Интервью назначено'
+      case 'interview_completed':
+        return 'Интервью пройдено'
+      case 'accepted':
+        return 'Принято'
+      case 'rejected':
+        return 'Отклонено'
+      case 'reviewed':
+        return 'Просмотрено'
+      default:
+        return status
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      case 'interview_scheduled':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+      case 'interview_completed':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+      case 'accepted':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      case 'rejected':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      case 'reviewed':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    }
+  }
+
+  const filteredApplications = filter === 'all' 
+    ? applications 
+    : applications.filter(app => app.status === filter)
+
+  const stats = [
+    { label: 'Всего заявок', value: applications.length, color: 'bg-blue-500' },
+    { label: 'На рассмотрении', value: applications.filter(a => a.status === 'pending').length, color: 'bg-yellow-500' },
+    { label: 'Интервью', value: applications.filter(a => a.status === 'interview_scheduled' || a.status === 'interview_completed').length, color: 'bg-purple-500' },
+    { label: 'Принято', value: applications.filter(a => a.status === 'accepted').length, color: 'bg-green-500' }
   ]
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <div className="flex h-screen">
-        {/* Левая панель - Видео */}
-        <div className="flex-1 relative">
-          <div className="absolute inset-0 bg-gray-800 rounded-lg m-4">
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-32 h-32 bg-primary-purple rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-4xl font-bold">AI</span>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+      <div className="hidden md:block"><Sidebar userRole="candidate" /></div>
+      <div className="flex-1 flex flex-col">
+        <DashboardHeader title="Applications" userRole="candidate" />
+        <div className="p-0 sm:p-6">
+          {/* HERO */}
+          <div className="relative overflow-hidden rounded-none sm:rounded-2xl mx-0 mb-6 sm:mb-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-black via-indigo-900 to-violet-900"></div>
+            <div className="absolute -top-24 -right-24 w-72 h-72 bg-violet-600 opacity-30 blur-3xl rounded-full"></div>
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-600 opacity-30 blur-3xl rounded-full"></div>
+            <div className="relative px-5 sm:px-8 py-8 sm:py-10">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Мои заявки</h1>
+                  <p className="mt-1 text-violet-100/90">Отслеживайте статусы и двигайтесь дальше</p>
                 </div>
-                <p className="text-white text-lg">AI Интервьюер</p>
-                <p className="text-gray-400">Алексей Смирнов</p>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={navigateToAIInterview}
+                  className="hidden sm:flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20"
+                >
+                  <Video size={20} />
+                  AI HR Интервью
+                </motion.button>
               </div>
             </div>
           </div>
 
-          {/* Видео кандидата */}
-          <div className="absolute bottom-6 right-6 w-48 h-36 bg-gray-700 rounded-lg border-2 border-gray-600">
-            <div className="h-full flex items-center justify-center">
-              {isVideoOff ? (
-                <div className="text-center">
-                  <VideoOff className="text-gray-400 mx-auto mb-2" size={32} />
-                  <p className="text-gray-400 text-sm">Камера выключена</p>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span className="text-white text-xl font-bold">Вы</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Панель управления */}
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-4 bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-full px-6 py-3"
-            >
-              <button
-                onClick={() => setIsMuted(!isMuted)}
-                className={`p-3 rounded-full transition-colors ${
-                  isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-600 hover:bg-gray-500'
-                }`}
-              >
-                {isMuted ? <MicOff className="text-white" size={20} /> : <Mic className="text-white" size={20} />}
-              </button>
-              <button
-                onClick={() => setIsVideoOff(!isVideoOff)}
-                className={`p-3 rounded-full transition-colors ${
-                  isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-600 hover:bg-gray-500'
-                }`}
-              >
-                {isVideoOff ? <VideoOff className="text-white" size={20} /> : <Video className="text-white" size={20} />}
-              </button>
-              <button className="p-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors">
-                <PhoneOff className="text-white" size={20} />
-              </button>
-              <button className="p-3 rounded-full bg-gray-600 hover:bg-gray-500 transition-colors">
-                <MessageSquare className="text-white" size={20} />
-              </button>
-              <button className="p-3 rounded-full bg-gray-600 hover:bg-gray-500 transition-colors">
-                <Settings className="text-white" size={20} />
-              </button>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Правая панель - Вопросы и информация */}
-        <div className="w-96 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700">
-          <div className="h-full flex flex-col">
-            {/* Заголовок */}
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                Техническое интервью
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Frontend Developer - TechCorp
-              </p>
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-sm text-gray-500 dark:text-gray-500">
-                  Вопрос {currentQuestion} из {questions.length}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-green-500">В эфире</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Текущий вопрос */}
-            <div className="flex-1 p-6">
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 px-5 sm:px-0">
+            {stats.map((stat, index) => (
               <motion.div
-                key={currentQuestion}
+                key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6"
+                transition={{ delay: index * 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-700"
               >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Текущий вопрос:
-                </h3>
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-gray-700 dark:text-gray-300">
-                    {questions[currentQuestion - 1].text}
-                  </p>
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`w-3 h-3 rounded-full ${stat.color}`}></div>
+                  <span className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</span>
                 </div>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-sm text-gray-500 dark:text-gray-500">
-                    Время на ответ: {Math.floor(questions[currentQuestion - 1].timeLimit / 60)} мин
-                  </span>
-                  <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-                    <div className="w-3/4 h-full bg-green-500 rounded-full"></div>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Filters */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-6 px-5 sm:px-0"
+          >
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'all', label: 'Все заявки' },
+                { key: 'pending', label: 'На рассмотрении' },
+                { key: 'interview_scheduled', label: 'Интервью назначено' },
+                { key: 'interview_completed', label: 'Интервью пройдено' },
+                { key: 'accepted', label: 'Принято' },
+                { key: 'rejected', label: 'Отклонено' }
+              ].map((filterOption) => (
+                <button
+                  key={filterOption.key}
+                  onClick={() => setFilter(filterOption.key)}
+                  className={`px-4 py-2 rounded-xl transition ${
+                    filter === filterOption.key
+                      ? 'bg-primary-purple text-white'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {filterOption.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Applications List */}
+          <div className="space-y-4 px-5 sm:px-0">
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-500">Загрузка заявок...</p>
+              </div>
+            ) : (
+              filteredApplications.map((application, index) => (
+              <motion.div
+                key={application.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-primary-purple rounded-xl flex items-center justify-center">
+                        <Building className="text-white" size={24} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                            {application.vacancy?.title || 'Неизвестная позиция'}
+                          </h3>
+                          <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}>
+                            {getStatusText(application.status)}
+                          </span>
+                        </div>
+                        <p className="text-lg text-gray-600 dark:text-gray-400 mb-3">
+                          {application.vacancy?.creator?.full_name || application.vacancy?.creator?.username || 'Неизвестная компания'}
+                        </p>
+                        <p className="text-gray-700 dark:text-gray-300 mb-4">
+                          {application.vacancy?.description || 'Описание не указано'}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Calendar size={16} />
+                            Подано: {new Date(application.uploaded_at).toLocaleDateString('ru-RU')}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Building size={16} />
+                            {application.vacancy?.location || 'Не указано'}
+                          </div>
+                          <div className="font-medium text-green-600 dark:text-green-400">
+                            {application.vacancy?.salary_from && application.vacancy?.salary_to 
+                              ? `${application.vacancy.salary_from.toLocaleString()} - ${application.vacancy.salary_to.toLocaleString()} ₽`
+                              : 'Зарплата не указана'
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 ml-4">
+                    <button className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
+                      <Eye size={20} />
+                    </button>
+                    <button className="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition">
+                      <MessageSquare size={20} />
+                    </button>
                   </div>
                 </div>
               </motion.div>
-
-              {/* Прогресс интервью */}
-              <div className="mb-6">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-                  Прогресс интервью
-                </h4>
-                <div className="space-y-2">
-                  {questions.map((question, index) => (
-                    <div
-                      key={question.id}
-                      className={`flex items-center gap-3 p-2 rounded-lg ${
-                        index + 1 === currentQuestion
-                          ? 'bg-primary-purple bg-opacity-10 border border-primary-purple'
-                          : index + 1 < currentQuestion
-                          ? 'bg-green-50 dark:bg-green-900/20'
-                          : 'bg-gray-50 dark:bg-gray-700'
-                      }`}
-                    >
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        index + 1 === currentQuestion
-                          ? 'bg-primary-purple text-white'
-                          : index + 1 < currentQuestion
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
-                      }`}>
-                        {index + 1}
-                      </div>
-                      <span className={`text-sm ${
-                        index + 1 === currentQuestion
-                          ? 'text-primary-purple font-medium'
-                          : index + 1 < currentQuestion
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-gray-500 dark:text-gray-400'
-                      }`}>
-                        Вопрос {index + 1}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Советы */}
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                  💡 Совет
-                </h4>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  Говорите четко и структурированно. Не торопитесь с ответом, лучше подумать несколько секунд.
-                </p>
-              </div>
-            </div>
-
-            {/* Кнопки управления */}
-            <div className="p-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setCurrentQuestion(Math.max(1, currentQuestion - 1))}
-                  disabled={currentQuestion === 1}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Назад
-                </button>
-                <button
-                  onClick={() => setCurrentQuestion(Math.min(questions.length, currentQuestion + 1))}
-                  disabled={currentQuestion === questions.length}
-                  className="flex-1 px-4 py-2 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Далее
-                </button>
-              </div>
-            </div>
+              ))
+            )}
           </div>
+
+          {filteredApplications.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12 px-5 sm:px-0"
+            >
+              <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Building className="text-gray-400" size={32} />
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+                Нет заявок
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                У вас пока нет заявок с выбранным статусом
+              </p>
+              <button
+                onClick={() => setFilter('all')}
+                className="px-6 py-3 bg-primary-purple text-white rounded-xl hover:bg-opacity-90 transition"
+              >
+                Показать все заявки
+              </button>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
