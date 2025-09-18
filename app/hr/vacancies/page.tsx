@@ -239,33 +239,37 @@ export default function HRVacancies() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
-      <Sidebar userRole="hr" />
+      <div className="hidden md:block"><Sidebar userRole="hr" /></div>
       <div className="flex-1 flex flex-col">
         <DashboardHeader title="Vacancies" userRole="hr" />
-        <div className="p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  Управление вакансиями
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Создавайте и управляйте вакансиями
-                </p>
+        <div className="p-0 sm:p-6">
+          {/* HERO */}
+          <div className="relative overflow-hidden rounded-none sm:rounded-2xl mx-0 mb-6 sm:mb-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-black via-indigo-900 to-violet-900"></div>
+            <div className="absolute -top-24 -right-24 w-72 h-72 bg-violet-600 opacity-30 blur-3xl rounded-full"></div>
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-600 opacity-30 blur-3xl rounded-full"></div>
+            {/* Дополнительные легкие элементы */}
+            <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full blur-lg"></div>
+            <div className="absolute bottom-1/4 right-1/3 w-12 h-12 bg-cyan-500/20 rounded-full blur-md"></div>
+            <div className="relative px-5 sm:px-8 py-8 sm:py-10">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Управление вакансиями</h1>
+                  <p className="mt-1 text-violet-100/90">Создавайте, редактируйте и анализируйте вакансии</p>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowCreateForm(true)}
+                  className="hidden sm:flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20"
+                >
+                  <Plus size={20} />
+                  Создать вакансию
+                </motion.button>
               </div>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus size={20} />
-                Создать вакансию
-              </button>
             </div>
-          </motion.div>
+          </div>
+
 
           {/* Форма создания вакансии */}
           {showCreateForm && (
@@ -425,8 +429,10 @@ export default function HRVacancies() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6"
+            className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200/70 dark:border-gray-700/70 p-5 sm:p-6 mb-6 mx-5 sm:mx-0 hover:shadow-2xl transition-all duration-500 overflow-hidden"
           >
+            {/* Легкий декоративный элемент */}
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/3 to-purple-500/3 rounded-full blur-xl"></div>
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
@@ -496,13 +502,8 @@ export default function HRVacancies() {
             )}
           </motion.div>
 
-          <div className="flex justify-between items-center mb-6">
-            <p className="text-gray-600 dark:text-gray-400">
-              Найдено {filteredVacancies.length} вакансий
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 px-5 sm:px-0">
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -515,8 +516,14 @@ export default function HRVacancies() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow border border-gray-100 dark:border-gray-700"
+                className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 sm:p-6 hover:shadow-xl transition-all duration-300 border border-gray-200/70 dark:border-gray-700/70 overflow-hidden group"
               >
+                {/* Легкий декоративный фон */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-green-500/5 to-cyan-500/5 rounded-full blur-xl group-hover:scale-105 transition-transform duration-500"></div>
+                
+                {/* Контент карточки */}
+                <div className="relative z-10">
                 <div className="flex justify-between items-start gap-4 mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3">
@@ -528,10 +535,10 @@ export default function HRVacancies() {
                       {String(vacancy.company || '').trim() || 'Компания не указана'}
                     </p>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 relative z-10">
                     <button 
                       onClick={() => handleViewDetails(vacancy)}
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 transition-colors"
+                      className="p-2 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-500 hover:text-blue-600 transition-colors"
                       title="Просмотреть детали"
                     >
                       <Eye size={18} />
@@ -540,14 +547,14 @@ export default function HRVacancies() {
                       <>
                         <button 
                           onClick={() => handleEditVacancy(vacancy)}
-                          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-green-600 transition-colors"
+                          className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-green-600 transition-colors"
                           title="Редактировать"
                         >
                           <Edit size={18} />
                         </button>
                         <button 
                           onClick={() => handleDeleteVacancy(vacancy.id)}
-                          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-600 transition-colors"
+                          className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-600 transition-colors"
                           title="Удалить"
                         >
                           <Trash2 size={18} />
@@ -580,7 +587,7 @@ export default function HRVacancies() {
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Требования</h4>
                     <div className="flex flex-wrap gap-2">
-                      {vacancy.requirements.map((req: string, idx: number) => (
+                      {vacancy.requirements.slice(0, 3).map((req: string, idx: number) => (
                         <span
                           key={idx}
                           className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs"
@@ -588,6 +595,11 @@ export default function HRVacancies() {
                           {req}
                         </span>
                       ))}
+                      {vacancy.requirements.length > 3 && (
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded text-xs">
+                          +{vacancy.requirements.length - 3} еще
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -596,7 +608,7 @@ export default function HRVacancies() {
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Условия</h4>
                     <div className="flex flex-wrap gap-2">
-                      {vacancy.benefits.map((b: string, idx: number) => (
+                      {vacancy.benefits.slice(0, 3).map((b: string, idx: number) => (
                         <span
                           key={idx}
                           className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs"
@@ -604,6 +616,11 @@ export default function HRVacancies() {
                           {b}
                         </span>
                       ))}
+                      {vacancy.benefits.length > 3 && (
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded text-xs">
+                          +{vacancy.benefits.length - 3} еще
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -612,6 +629,7 @@ export default function HRVacancies() {
                   <div className="text-xs text-gray-500 dark:text-gray-400">
                     Опубликовано: {vacancy.postedDate ? new Date(vacancy.postedDate).toLocaleDateString('ru-RU') : vacancy.created_at ? new Date(vacancy.created_at).toLocaleDateString('ru-RU') : '—'}
                   </div>
+                </div>
                 </div>
               </motion.div>
               ))

@@ -83,32 +83,30 @@ export default function CandidateApplications() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
-      <Sidebar userRole="candidate" />
+      <div className="hidden md:block"><Sidebar userRole="candidate" /></div>
       <div className="flex-1 flex flex-col">
         <DashboardHeader title="Applications" userRole="candidate" />
-        <div className="p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Мои заявки
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Отслеживайте статус ваших заявок на работу
-            </p>
-          </motion.div>
+        <div className="p-0 sm:p-6">
+          {/* HERO */}
+          <div className="relative overflow-hidden rounded-none sm:rounded-2xl mx-0 mb-6 sm:mb-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-black via-indigo-900 to-violet-900"></div>
+            <div className="absolute -top-24 -right-24 w-72 h-72 bg-violet-600 opacity-30 blur-3xl rounded-full"></div>
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-600 opacity-30 blur-3xl rounded-full"></div>
+            <div className="relative px-5 sm:px-8 py-8 sm:py-10">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Мои заявки</h1>
+              <p className="mt-1 text-violet-100/90">Отслеживайте статусы и двигайтесь дальше</p>
+            </div>
+          </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 px-5 sm:px-0">
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className={`w-3 h-3 rounded-full ${stat.color}`}></div>
@@ -124,7 +122,7 @@ export default function CandidateApplications() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="mb-6"
+            className="mb-6 px-5 sm:px-0"
           >
             <div className="flex flex-wrap gap-2">
               {[
@@ -138,7 +136,7 @@ export default function CandidateApplications() {
                 <button
                   key={filterOption.key}
                   onClick={() => setFilter(filterOption.key)}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
+                  className={`px-4 py-2 rounded-xl transition ${
                     filter === filterOption.key
                       ? 'bg-primary-purple text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -151,7 +149,7 @@ export default function CandidateApplications() {
           </motion.div>
 
           {/* Applications List */}
-          <div className="space-y-4">
+          <div className="space-y-4 px-5 sm:px-0">
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -164,12 +162,12 @@ export default function CandidateApplications() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-primary-purple rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-primary-purple rounded-xl flex items-center justify-center">
                         <Building className="text-white" size={24} />
                       </div>
                       <div className="flex-1">
@@ -187,7 +185,7 @@ export default function CandidateApplications() {
                         <p className="text-gray-700 dark:text-gray-300 mb-4">
                           {application.vacancy?.description || 'Описание не указано'}
                         </p>
-                        <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-500">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-500">
                           <div className="flex items-center gap-1">
                             <Calendar size={16} />
                             Подано: {new Date(application.uploaded_at).toLocaleDateString('ru-RU')}
@@ -208,10 +206,10 @@ export default function CandidateApplications() {
                   </div>
                   
                   <div className="flex items-center gap-2 ml-4">
-                    <button className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <button className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
                       <Eye size={20} />
                     </button>
-                    <button className="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors">
+                    <button className="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition">
                       <MessageSquare size={20} />
                     </button>
                   </div>
@@ -225,7 +223,7 @@ export default function CandidateApplications() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-12"
+              className="text-center py-12 px-5 sm:px-0"
             >
               <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Building className="text-gray-400" size={32} />
@@ -238,7 +236,7 @@ export default function CandidateApplications() {
               </p>
               <button
                 onClick={() => setFilter('all')}
-                className="px-6 py-3 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                className="px-6 py-3 bg-primary-purple text-white rounded-xl hover:bg-opacity-90 transition"
               >
                 Показать все заявки
               </button>
