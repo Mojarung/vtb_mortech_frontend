@@ -50,7 +50,8 @@ export default function HRVacancies() {
     employment_type: '',
     experience_level: '',
     benefits: '',
-    company: ''
+    company: '',
+    auto_interview_enabled: false
   })
 
   useEffect(() => {
@@ -159,7 +160,8 @@ export default function HRVacancies() {
         employment_type: '',
         experience_level: '',
         benefits: '',
-        company: ''
+        company: '',
+        auto_interview_enabled: false
       })
       setShowCreateForm(false)
       
@@ -208,7 +210,8 @@ export default function HRVacancies() {
       const updateData = {
         ...editingVacancy,
         salary_from: editingVacancy.salary_from ? parseInt(editingVacancy.salary_from) : null,
-        salary_to: editingVacancy.salary_to ? parseInt(editingVacancy.salary_to) : null
+        salary_to: editingVacancy.salary_to ? parseInt(editingVacancy.salary_to) : null,
+        auto_interview_enabled: editingVacancy.auto_interview_enabled
       }
 
       await apiClient.updateVacancy(editingVacancy.id, updateData)
@@ -399,6 +402,23 @@ export default function HRVacancies() {
                       <option value="3-5 лет">3-5 лет</option>
                       <option value="5+ лет">5+ лет</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Автоматическое интервью
+                  </label>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={newVacancy.auto_interview_enabled}
+                      onChange={(e) => setNewVacancy({...newVacancy, auto_interview_enabled: e.target.checked})}
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      Включить автоматическое интервью для этой вакансии
+                    </span>
                   </div>
                 </div>
 
@@ -876,6 +896,23 @@ export default function HRVacancies() {
                       <option value="3-5 лет">3-5 лет</option>
                       <option value="5+ лет">5+ лет</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Автоматическое интервью
+                  </label>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={editingVacancy.auto_interview_enabled}
+                      onChange={(e) => setEditingVacancy({...editingVacancy, auto_interview_enabled: e.target.checked})}
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      Включить автоматическое интервью для этой вакансии
+                    </span>
                   </div>
                 </div>
 
