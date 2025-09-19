@@ -9,50 +9,52 @@ import { PipecatClient } from '@pipecat-ai/client-js'
 import { DailyTransport } from '@pipecat-ai/daily-transport'
 import { PipecatClientProvider, usePipecatClient, PipecatClientVideo, PipecatClientAudio, PipecatClientMicToggle, PipecatClientCamToggle } from '@pipecat-ai/client-react'
 
-type MicToggleProps = {
-  disabled?: boolean;
-  isMicEnabled: boolean;
-  onClick: () => void;
-}
-
-type CamToggleProps = {
-  disabled?: boolean;
-  isCamEnabled: boolean;
-  onClick: () => void;
-}
-
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_AVATAR_BASE_URL || ''
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 const PIPECAT_BACKEND_URL = `${API_BASE_URL.replace(/\/$/, '')}/avatar/interview`
 
-function AIInterviewPageInternal() {
+function AIInterviewPageInternal({ 
+  externalBotConnected, 
+  externalTimerActive 
+}: { 
+  externalBotConnected: boolean
+  externalTimerActive: boolean 
+}) {
   const [isConnecting, setIsConnecting] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [status, setStatus] = useState('AI бот: Отключено')
   const [currentTime, setCurrentTime] = useState('00:00')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
-  const [isTimerRunning, setIsTimerRunning] = useState(false)
+  
+  // Используем состояние из внешнего компонента
+  const isBotConnected = externalBotConnected
+  const timerActive = externalTimerActive
 
   const client = usePipecatClient()
   const searchParams = useSearchParams()
   const interviewId = searchParams.get('interview_id') || ''
 
+  // Таймер запускается только после подключения AI HR
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null
-    if (isTimerRunning) {
+    let timer: NodeJS.Timeout
+    if (timerActive) {
       timer = setInterval(() => {
         setElapsedSeconds(prev => prev + 1)
-        const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')
-        const seconds = (elapsedSeconds % 60).toString().padStart(2, '0')
-        setCurrentTime(`${minutes}:${seconds}`)
       }, 1000)
     }
     return () => {
       if (timer) clearInterval(timer)
     }
-  }, [elapsedSeconds, isTimerRunning])
+  }, [timerActive])
+
+  // Обновление отображения времени
+  useEffect(() => {
+    const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')
+    const seconds = (elapsedSeconds % 60).toString().padStart(2, '0')
+    setCurrentTime(`${minutes}:${seconds}`)
+  }, [elapsedSeconds])
 
   const handleConnect = useCallback(async () => {
     if (!client || isConnecting || isConnected) return
@@ -64,8 +66,7 @@ function AIInterviewPageInternal() {
       await (client as any).startBotAndConnect({ 
         endpoint: webrtcUrl })
       setIsConnected(true)
-      setStatus('AI бот: ПОДКЛЮЧЕНО')  // Изменил статус
-      setIsTimerRunning(true)  // Запускаем таймер
+      setStatus('AI бот: Подключение...')
     } catch (e) {
       console.error('Ошибка подключения к Pipecat:', e)
       setIsConnected(false)
@@ -100,8 +101,8 @@ function AIInterviewPageInternal() {
       <div className="flex items-center justify-between p-4 bg-gray-900">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : isConnecting ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'}`}></div>
-            <span className="text-sm text-gray-300">{status}</span>
+            <div className={`w-2 h-2 rounded-full ${isBotConnected ? 'bg-green-500' : isConnecting ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'}`}></div>
+            <span className="text-sm text-gray-300">{isBotConnected ? 'ПОДКЛЮЧЕНО' : status}</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -145,10 +146,10 @@ function AIInterviewPageInternal() {
           </button>
 
           <PipecatClientMicToggle>
-            {({ disabled, isMicEnabled, onClick }: MicToggleProps) => (
+            {({ disabled, isMicEnabled, onClick }) => (
               <button
                 onClick={onClick}
-                disabled={disabled}
+                disabled={disabled || false}
                 className={`p-3 rounded-full transition-colors ${isMicEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'}`}
               >
                 {isMicEnabled ? <Mic className="text-white" size={20} /> : <MicOff className="text-white" size={20} />}
@@ -157,10 +158,10 @@ function AIInterviewPageInternal() {
           </PipecatClientMicToggle>
 
           <PipecatClientCamToggle>
-            {({ disabled, isCamEnabled, onClick }: CamToggleProps) => (
+            {({ disabled, isCamEnabled, onClick }) => (
               <button
                 onClick={onClick}
-                disabled={disabled}
+                disabled={disabled || false}
                 className={`p-3 rounded-full transition-colors ${isCamEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'}`}
               >
                 {isCamEnabled ? <VideoIcon className="text-white" size={20} /> : <VideoOffIcon className="text-white" size={20} />}
@@ -175,6 +176,13 @@ function AIInterviewPageInternal() {
               className={`px-6 py-3 rounded-full font-medium transition-colors ${isConnecting ? 'bg-purple-400 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'}`}
             >
               {isConnecting ? 'Подключение...' : 'Подключиться к AI'}
+            </button>
+          ) : !isBotConnected ? (
+            <button
+              disabled={true}
+              className="px-6 py-3 rounded-full font-medium transition-colors bg-gray-500 text-white cursor-not-allowed"
+            >
+              Ожидание AI HR...
             </button>
           ) : (
             <button
@@ -195,13 +203,13 @@ function AIInterviewPageInternal() {
 
 export default function AIInterviewPage() {
   const [isClient, setIsClient] = useState(false)
-  const [isConnected, setIsConnected] = useState(false)
-  const [status, setStatus] = useState('AI бот: Отключено')
-  const [isTimerRunning, setIsTimerRunning] = useState(false)
   
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  const [internalBotConnected, setInternalBotConnected] = useState(false)
+  const [internalTimerActive, setInternalTimerActive] = useState(false)
 
   const client = useMemo(() => {
     if (!isClient || typeof window === 'undefined') return null as unknown as PipecatClient
@@ -212,23 +220,20 @@ export default function AIInterviewPage() {
       callbacks: {
         onBotConnected: () => {
           console.log('🤖 Бот подключился')
-          setIsConnected(true)
-          setStatus('AI бот: ПОДКЛЮЧЕНО')
-          setIsTimerRunning(true)
+          setInternalBotConnected(true)
+          setInternalTimerActive(true)
         },
         onBotDisconnected: () => {
           console.log('🤖 Бот отключился')
-          setIsConnected(false)
-          setStatus('AI бот: Отключено')
-          setIsTimerRunning(false)
+          setInternalBotConnected(false)
+          setInternalTimerActive(false)
         },
-        onBotReady: () => console.log('🤖 Бот готов к работе'),
-        onError: (error: unknown) => {
-          console.error('❌ Ошибка Pipecat:', error)
-          setIsConnected(false)
-          setStatus('AI бот: Ошибка подключения')
-          setIsTimerRunning(false)
+        onBotReady: () => {
+          console.log('🤖 Бот готов к работе')
+          setInternalBotConnected(true)
+          setInternalTimerActive(true)
         },
+        onError: (error: unknown) => console.error('❌ Ошибка Pipecat:', error),
         onTrackStarted: (track: MediaStreamTrack, participant?: any) => {
           console.log('🎥 Трек запущен:', track.kind, participant)
         },
@@ -249,7 +254,10 @@ export default function AIInterviewPage() {
 
   return (
     <PipecatClientProvider client={client}>
-      <AIInterviewPageInternal />
+      <AIInterviewPageInternal 
+        externalBotConnected={internalBotConnected}
+        externalTimerActive={internalTimerActive}
+      />
     </PipecatClientProvider>
   )
 }
