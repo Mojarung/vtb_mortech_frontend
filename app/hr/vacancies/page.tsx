@@ -51,7 +51,8 @@ export default function HRVacancies() {
     experience_level: '',
     benefits: '',
     company: '',
-    auto_interview_enabled: false
+    auto_interview_enabled: false,
+    auto_interview_threshold: 70
   })
 
   useEffect(() => {
@@ -71,6 +72,16 @@ export default function HRVacancies() {
     }
 
     fetchVacancies()
+  }, [])
+
+  // Открывать форму создания при переходе с параметром ?create=1
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      if (url.searchParams.get('create') === '1') {
+        setShowCreateForm(true)
+      }
+    }
   }, [])
 
   // Фильтрация вакансий
@@ -137,7 +148,10 @@ export default function HRVacancies() {
       const vacancyData = {
         ...newVacancy,
         salary_from: newVacancy.salary_from ? parseInt(newVacancy.salary_from) : null,
-        salary_to: newVacancy.salary_to ? parseInt(newVacancy.salary_to) : null
+        salary_to: newVacancy.salary_to ? parseInt(newVacancy.salary_to) : null,
+        auto_interview_threshold: newVacancy.auto_interview_enabled
+          ? Number(newVacancy.auto_interview_threshold ?? 0)
+          : null
       }
 
       console.log('📝 Отправка создания вакансии. Данные:', vacancyData)
@@ -161,7 +175,8 @@ export default function HRVacancies() {
         experience_level: '',
         benefits: '',
         company: '',
-        auto_interview_enabled: false
+        auto_interview_enabled: false,
+        auto_interview_threshold: 70
       })
       setShowCreateForm(false)
       
@@ -211,7 +226,10 @@ export default function HRVacancies() {
         ...editingVacancy,
         salary_from: editingVacancy.salary_from ? parseInt(editingVacancy.salary_from) : null,
         salary_to: editingVacancy.salary_to ? parseInt(editingVacancy.salary_to) : null,
-        auto_interview_enabled: editingVacancy.auto_interview_enabled
+        auto_interview_enabled: !!editingVacancy.auto_interview_enabled,
+        auto_interview_threshold: editingVacancy.auto_interview_enabled
+          ? Number(editingVacancy.auto_interview_threshold ?? 0)
+          : null
       }
 
       await apiClient.updateVacancy(editingVacancy.id, updateData)
@@ -424,6 +442,24 @@ export default function HRVacancies() {
                       Включить автоматическое интервью для этой вакансии
                     </span>
                   </div>
+                  {newVacancy.auto_interview_enabled && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Порог соответствия резюме</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{newVacancy.auto_interview_threshold}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={Number(newVacancy.auto_interview_threshold ?? 0)}
+                        onChange={(e) => setNewVacancy({ ...newVacancy, auto_interview_threshold: Number(e.target.value) })}
+                        className="w-full"
+                      />
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Если ИИ-оценка резюме ≥ порога — интервью назначится автоматически</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
@@ -932,6 +968,24 @@ export default function HRVacancies() {
                       Включить автоматическое интервью для этой вакансии
                     </span>
                   </div>
+                  {editingVacancy.auto_interview_enabled && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Порог соответствия резюме</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{Number(editingVacancy.auto_interview_threshold ?? 0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={Number(editingVacancy.auto_interview_threshold ?? 0)}
+                        onChange={(e) => setEditingVacancy({ ...editingVacancy, auto_interview_threshold: Number(e.target.value) })}
+                        className="w-full"
+                      />
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Если ИИ-оценка резюме ≥ порога — интервью назначится автоматически</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3">

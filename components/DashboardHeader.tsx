@@ -159,10 +159,8 @@ export default function DashboardHeader({ title, userRole }: DashboardHeaderProp
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">
-                  {user?.username?.charAt(0).toUpperCase() || (userRole === 'hr' ? 'HR' : 'C')}
-                </span>
+              <div className="w-8 h-8 rounded-md bg-white flex items-center justify-center overflow-hidden">
+                <img src="/prICON.png" alt="User Avatar" className="w-8 h-8 object-cover rounded-md" />
               </div>
               <div className="text-left hidden sm:block">
                 <div className="text-sm font-medium text-gray-900 dark:text-white">
