@@ -19,6 +19,7 @@ function AIInterviewPageInternal() {
   const [isConnected, setIsConnected] = useState(false)
   const [status, setStatus] = useState('AI бот: Отключено')
   const [currentTime, setCurrentTime] = useState('00:00')
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
 
   const client = usePipecatClient()
   const searchParams = useSearchParams()
@@ -26,13 +27,13 @@ function AIInterviewPageInternal() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const now = new Date()
-      const minutes = now.getMinutes().toString().padStart(2, '0')
-      const seconds = now.getSeconds().toString().padStart(2, '0')
+      setElapsedSeconds(prev => prev + 1)
+      const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')
+      const seconds = (elapsedSeconds % 60).toString().padStart(2, '0')
       setCurrentTime(`${minutes}:${seconds}`)
     }, 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, [elapsedSeconds])
 
   const handleConnect = useCallback(async () => {
     if (!client || isConnecting || isConnected) return
