@@ -12,7 +12,6 @@ import {
   FileText, 
   PieChart, 
   Settings, 
-  LogOut,
   Menu,
   X,
   Briefcase
@@ -65,8 +64,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
       <motion.div
   initial={false}
   animate={{ 
-    width: isCollapsed ? 80 : 280,
-    x: isCollapsed ? -280 : 0
+    width: isCollapsed ? 80 : 280
   }}
   className={`fixed left-0 top-0 h-screen bg-gray-800 dark:bg-gray-900 text-white z-50 flex flex-col ${
     isCollapsed ? 'lg:translate-x-0 -translate-x-full' : 'translate-x-0'
@@ -116,17 +114,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="mt-auto p-6 border-t border-gray-600 dark:border-gray-700">
-          <button
-            onClick={() => window.location.href = '/auth/login'}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 dark:text-gray-400 hover:bg-gray-700 dark:hover:bg-gray-800 hover:text-white transition-colors ${
-              isCollapsed ? 'justify-center' : ''
-            }`}
-          >
-            <LogOut size={20} />
-            {!isCollapsed && <span>{t('logout')}</span>}
-          </button>
-        </div>
+        {/* Кнопка выхода удалена */}
       </motion.div>
 
       {/* Mobile menu button */}

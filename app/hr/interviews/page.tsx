@@ -48,10 +48,10 @@ export default function HRInterviews() {
     }
   }
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: string, summary?: string) => {
     switch (status) {
       case 'not_started':
-        return 'Запланировано'
+        return summary ? 'Пройдено' : 'Запланировано'
       case 'completed':
         return 'Завершено'
       case 'in_progress':
@@ -61,22 +61,9 @@ export default function HRInterviews() {
     }
   }
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '—'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ru-RU')
-  }
-
-  const formatTime = (dateString?: string) => {
-    if (!dateString) return '—'
-    const date = new Date(dateString)
-    return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-  }
-
-  const formatDuration = (minutes?: number) => {
-    if (!minutes) return '—'
-    return `${minutes} мин`
-  }
+  const formatDate = () => '—'
+  const formatTime = () => '—'
+  const formatDuration = () => '—'
 
   const getCandidateName = (interview: Interview) => {
     // Пытаемся получить имя из связанных данных
@@ -180,20 +167,7 @@ export default function HRInterviews() {
             >
               Список
             </button>
-            <button
-              onClick={() => setSelectedView('calendar')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                selectedView === 'calendar'
-                  ? 'bg-primary-purple text-white'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600'
-              }`}
-            >
-              Календарь
-            </button>
           </div>
-          <button className="px-4 py-2 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors">
-            Запланировать интервью
-          </button>
         </motion.div>
 
         {selectedView === 'list' ? (
@@ -254,18 +228,18 @@ export default function HRInterviews() {
                       <div className="text-center">
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-1">
                           <Calendar size={16} />
-                          <span className="text-sm">{formatDate(interview.scheduled_date)}</span>
+                          <span className="text-sm">{formatDate()}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                           <Clock size={16} />
-                          <span className="text-sm">{formatTime(interview.scheduled_date)} ({formatDuration(interview.duration_minutes)})</span>
+                          <span className="text-sm">{formatTime()} ({formatDuration()})</span>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-2">
                         <Video className="text-blue-500" size={20} />
                         <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(interview.status)}`}>
-                          {getStatusText(interview.status)}
+                          {getStatusText(interview.status, interview.summary)}
                         </span>
                       </div>
                       
