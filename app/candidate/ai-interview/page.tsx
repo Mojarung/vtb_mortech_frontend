@@ -8,6 +8,9 @@ import { PipecatClient } from '@pipecat-ai/client-js'
 import { SmallWebRTCTransport } from '@pipecat-ai/small-webrtc-transport'
 import { PipecatClientProvider, usePipecatClient, PipecatClientVideo, PipecatClientAudio, PipecatClientMicToggle, PipecatClientCamToggle } from '@pipecat-ai/client-react'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 const PIPECAT_BACKEND_URL = `${API_BASE_URL.replace(/\/$/, '')}/avatar/interview`
 
@@ -168,25 +171,29 @@ function AIInterviewPageInternal() {
   )
 }
 
-// Конфигурация Pipecat клиента и провайдера
-const pipecatClient = new PipecatClient({
-  transport: new SmallWebRTCTransport(),
-  enableCam: true,
-  enableMic: true,
-  callbacks: {
-    onBotConnected: () => console.log('🤖 Бот подключился'),
-    onBotDisconnected: () => console.log('🤖 Бот отключился'),
-    onBotReady: () => console.log('🤖 Бот готов к работе'),
-    onError: (error: unknown) => console.error('❌ Ошибка Pipecat:', error),
-    onTrackStarted: (track: MediaStreamTrack, participant?: any) => {
-      console.log('🎥 Трек запущен:', track.kind, participant)
-    },
-  },
-})
-
 export default function AIInterviewPage() {
+  const client = useMemo(() => {
+    if (typeof window === 'undefined') return null as unknown as PipecatClient
+    return new PipecatClient({
+      transport: new SmallWebRTCTransport(),
+      enableCam: true,
+      enableMic: true,
+      callbacks: {
+        onBotConnected: () => console.log('🤖 Бот подключился'),
+        onBotDisconnected: () => console.log('🤖 Бот отключился'),
+        onBotReady: () => console.log('🤖 Бот готов к работе'),
+        onError: (error: unknown) => console.error('❌ Ошибка Pipecat:', error),
+        onTrackStarted: (track: MediaStreamTrack, participant?: any) => {
+          console.log('🎥 Трек запущен:', track.kind, participant)
+        },
+      },
+    })
+  }, [])
+
+  if (!client) return null
+
   return (
-    <PipecatClientProvider client={pipecatClient}>
+    <PipecatClientProvider client={client}>
       <AIInterviewPageInternal />
     </PipecatClientProvider>
   )
