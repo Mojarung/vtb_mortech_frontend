@@ -9,10 +9,15 @@ import { PipecatClient } from '@pipecat-ai/client-js'
 import { DailyTransport } from '@pipecat-ai/daily-transport'
 import { PipecatClientProvider, usePipecatClient, PipecatClientVideo, PipecatClientAudio, PipecatClientMicToggle, PipecatClientCamToggle } from '@pipecat-ai/client-react'
 
-type ToggleProps = {
-  disabled: boolean;
-  isMicEnabled?: boolean;
-  isCamEnabled?: boolean;
+type MicToggleProps = {
+  disabled?: boolean;
+  isMicEnabled: boolean;
+  onClick: () => void;
+}
+
+type CamToggleProps = {
+  disabled?: boolean;
+  isCamEnabled: boolean;
   onClick: () => void;
 }
 
@@ -140,7 +145,7 @@ function AIInterviewPageInternal() {
           </button>
 
           <PipecatClientMicToggle>
-            {({ disabled, isMicEnabled, onClick }: ToggleProps) => (
+            {({ disabled, isMicEnabled, onClick }: MicToggleProps) => (
               <button
                 onClick={onClick}
                 disabled={disabled}
@@ -152,7 +157,7 @@ function AIInterviewPageInternal() {
           </PipecatClientMicToggle>
 
           <PipecatClientCamToggle>
-            {({ disabled, isCamEnabled, onClick }: ToggleProps) => (
+            {({ disabled, isCamEnabled, onClick }: CamToggleProps) => (
               <button
                 onClick={onClick}
                 disabled={disabled}
