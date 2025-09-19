@@ -58,7 +58,7 @@ export default function HRDashboard() {
     if (user) fetchData()
   }, [user])
 
-  // Подготовка данных для графика на основе реальных интервью (группируем по неделям)
+  // Подготовка данных для графика на основе реальных интервью (группируем по неделям)sd
   const chartData = useMemo(() => {
     if (!interviews || interviews.length === 0) {
       return Array.from({ length: 8 }).map((_, i) => ({ label: `Нед. ${i + 1}`, value: (i + 1) * 5 }))
