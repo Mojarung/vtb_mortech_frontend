@@ -210,7 +210,7 @@ export default function CandidateApplications() {
                           </h3>
                         </div>
                         <p className="text-lg text-gray-600 dark:text-gray-400 mb-3">
-                          {application.vacancy?.creator?.full_name || application.vacancy?.creator?.username || 'Неизвестная компания'}
+                          {application.vacancy?.company || application.vacancy?.creator?.full_name || application.vacancy?.creator?.username || 'Неизвестная компания'}
                         </p>
                         <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3">
                           {application.vacancy?.description || 'Описание не указано'}
@@ -310,7 +310,7 @@ export default function CandidateApplications() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Компания</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  {selectedVacancy.creator?.full_name || selectedVacancy.creator?.username || 'Неизвестная компания'}
+                  {selectedVacancy.company || selectedVacancy.creator?.full_name || selectedVacancy.creator?.username || 'Неизвестная компания'}
                 </p>
               </div>
               

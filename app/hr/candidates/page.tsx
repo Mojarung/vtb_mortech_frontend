@@ -91,6 +91,8 @@ export default function HRCandidates() {
   const [editingStatus, setEditingStatus] = useState<number | null>(null)
   const [newStatus, setNewStatus] = useState('')
   const [notifications, setNotifications] = useState<any[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
   const { user } = useAuth()
 
   const addNotification = (message: string, type: 'success' | 'error' | 'warning') => {
@@ -123,6 +125,17 @@ export default function HRCandidates() {
     }
     return statusMap[status] || status
   }
+
+  // Пагинация
+  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentCandidates = filteredCandidates.slice(startIndex, endIndex)
+
+  // Сброс страницы при изменении фильтров
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedPosition, selectedStatus, selectedDate])
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -261,25 +274,29 @@ export default function HRCandidates() {
       <Sidebar userRole="hr" />
       <div className="flex-1 flex flex-col">
         <DashboardHeader title="Candidates" userRole="hr" />
-        <div className="p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Список кандидатов
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Управление кандидатами и их интервью
-          </p>
-        </motion.div>
+        <div className="p-0 sm:p-6">
+        {/* HERO */}
+        <div className="relative overflow-hidden rounded-none sm:rounded-2xl mx-0 mb-6 sm:mb-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-indigo-900 to-violet-900"></div>
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-violet-600 opacity-30 blur-3xl rounded-full"></div>
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-600 opacity-30 blur-3xl rounded-full"></div>
+          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full blur-lg"></div>
+          <div className="absolute bottom-1/4 right-1/3 w-12 h-12 bg-cyan-500/20 rounded-full blur-md"></div>
+          <div className="relative px-5 sm:px-8 py-8 sm:py-10">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Список кандидатов</h1>
+                <p className="mt-1 text-violet-100/90">Управление кандидатами и их интервью</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden px-5 sm:px-0"
         >
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
@@ -300,47 +317,78 @@ export default function HRCandidates() {
                   <span className="text-gray-700 dark:text-gray-300">Фильтры</span>
                 </button>
               </div>
-              <button className="px-4 py-2 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition-colors">
-                Добавить кандидата
-              </button>
             </div>
 
             {showFilters && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ 
+                  duration: 0.3, 
+                  ease: [0.4, 0.0, 0.2, 1],
+                  staggerChildren: 0.1
+                }}
+                className="mt-4 p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 shadow-lg"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <select 
-                    value={selectedPosition}
-                    onChange={(e) => setSelectedPosition(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
                   >
-                    <option value="">Все позиции</option>
-                    {Array.from(new Set(candidates.map(c => c.position))).map(position => (
-                      <option key={position} value={position}>{position}</option>
-                    ))}
-                  </select>
-                  <select 
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Позиция
+                    </label>
+                    <select 
+                      value={selectedPosition}
+                      onChange={(e) => setSelectedPosition(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
+                    >
+                      <option value="">Все позиции</option>
+                      {Array.from(new Set(candidates.map(c => c.position))).map(position => (
+                        <option key={position} value={position}>{position}</option>
+                      ))}
+                    </select>
+                  </motion.div>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
                   >
-                    <option value="">Все статусы</option>
-                    <option value="pending">Ожидает рассмотрения</option>
-                    <option value="accepted">Принята</option>
-                    <option value="rejected">Отклонена</option>
-                    <option value="interview_scheduled">Интервью назначено</option>
-                    <option value="interview_completed">Интервью пройдено</option>
-                  </select>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Статус
+                    </label>
+                    <select 
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
+                    >
+                      <option value="">Все статусы</option>
+                      <option value="pending">Ожидает рассмотрения</option>
+                      <option value="accepted">Принята</option>
+                      <option value="rejected">Отклонена</option>
+                      <option value="interview_scheduled">Интервью назначено</option>
+                      <option value="interview_completed">Интервью пройдено</option>
+                    </select>
+                  </motion.div>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Дата
+                    </label>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
+                    />
+                  </motion.div>
                 </div>
               </motion.div>
             )}
@@ -380,8 +428,8 @@ export default function HRCandidates() {
                       </div>
                     </td>
                   </tr>
-                ) : filteredCandidates.length > 0 ? (
-                  filteredCandidates.map((candidate, index) => (
+                ) : currentCandidates.length > 0 ? (
+                  currentCandidates.map((candidate, index) => (
                   <motion.tr
                     key={candidate.id || index}
                     initial={{ opacity: 0, x: -20 }}
@@ -419,13 +467,13 @@ export default function HRCandidates() {
                       <div className="flex items-center gap-2">
                         {candidate.id && (
                           <a
-                            className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="group inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 hover:scale-110"
                             title="Скачать резюме"
                             href={apiClient.getResumeDownloadUrlById(candidate.id)}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-gray-600 dark:text-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200">
                               <path d="M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 12.586V4a1 1 0 011-1z" />
                               <path d="M5 15a1 1 0 011 1v2h12v-2a1 1 0 112 0v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3a1 1 0 012 0v2h2v-2a1 1 0 011-1z" />
                             </svg>
@@ -486,14 +534,61 @@ export default function HRCandidates() {
           <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Показано {filteredCandidates.length} из {candidates.length}
+                Показано {startIndex + 1}-{Math.min(endIndex, filteredCandidates.length)} из {filteredCandidates.length}
               </p>
               <div className="flex items-center gap-2">
-                <button className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                {/* Кнопка "Предыдущая" */}
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="group flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-800"
+                >
+                  <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
                   Предыдущая
                 </button>
-                <button className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+
+                {/* Номера страниц */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-10 h-10 flex items-center justify-center text-sm font-medium rounded-lg transition-all duration-200 ${
+                          currentPage === pageNum
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg scale-105'
+                            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:scale-105'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Кнопка "Следующая" */}
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="group flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-800"
+                >
                   Следующая
+                  <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
             </div>
