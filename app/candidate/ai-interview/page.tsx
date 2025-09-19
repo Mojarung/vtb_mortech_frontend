@@ -9,6 +9,13 @@ import { PipecatClient } from '@pipecat-ai/client-js'
 import { DailyTransport } from '@pipecat-ai/daily-transport'
 import { PipecatClientProvider, usePipecatClient, PipecatClientVideo, PipecatClientAudio, PipecatClientMicToggle, PipecatClientCamToggle } from '@pipecat-ai/client-react'
 
+type ToggleProps = {
+  disabled: boolean;
+  isMicEnabled?: boolean;
+  isCamEnabled?: boolean;
+  onClick: () => void;
+}
+
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
@@ -21,20 +28,26 @@ function AIInterviewPageInternal() {
   const [status, setStatus] = useState('AI бот: Отключено')
   const [currentTime, setCurrentTime] = useState('00:00')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [isTimerRunning, setIsTimerRunning] = useState(false)
 
   const client = usePipecatClient()
   const searchParams = useSearchParams()
   const interviewId = searchParams.get('interview_id') || ''
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedSeconds(prev => prev + 1)
-      const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')
-      const seconds = (elapsedSeconds % 60).toString().padStart(2, '0')
-      setCurrentTime(`${minutes}:${seconds}`)
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [elapsedSeconds])
+    let timer: NodeJS.Timeout | null = null
+    if (isTimerRunning) {
+      timer = setInterval(() => {
+        setElapsedSeconds(prev => prev + 1)
+        const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')
+        const seconds = (elapsedSeconds % 60).toString().padStart(2, '0')
+        setCurrentTime(`${minutes}:${seconds}`)
+      }, 1000)
+    }
+    return () => {
+      if (timer) clearInterval(timer)
+    }
+  }, [elapsedSeconds, isTimerRunning])
 
   const handleConnect = useCallback(async () => {
     if (!client || isConnecting || isConnected) return
@@ -46,7 +59,8 @@ function AIInterviewPageInternal() {
       await (client as any).startBotAndConnect({ 
         endpoint: webrtcUrl })
       setIsConnected(true)
-      setStatus('AI бот: Активен')
+      setStatus('AI бот: ПОДКЛЮЧЕНО')  // Изменил статус
+      setIsTimerRunning(true)  // Запускаем таймер
     } catch (e) {
       console.error('Ошибка подключения к Pipecat:', e)
       setIsConnected(false)
@@ -126,7 +140,7 @@ function AIInterviewPageInternal() {
           </button>
 
           <PipecatClientMicToggle>
-            {({ disabled, isMicEnabled, onClick }) => (
+            {({ disabled, isMicEnabled, onClick }: ToggleProps) => (
               <button
                 onClick={onClick}
                 disabled={disabled}
@@ -138,7 +152,7 @@ function AIInterviewPageInternal() {
           </PipecatClientMicToggle>
 
           <PipecatClientCamToggle>
-            {({ disabled, isCamEnabled, onClick }) => (
+            {({ disabled, isCamEnabled, onClick }: ToggleProps) => (
               <button
                 onClick={onClick}
                 disabled={disabled}
@@ -176,6 +190,9 @@ function AIInterviewPageInternal() {
 
 export default function AIInterviewPage() {
   const [isClient, setIsClient] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
+  const [status, setStatus] = useState('AI бот: Отключено')
+  const [isTimerRunning, setIsTimerRunning] = useState(false)
   
   useEffect(() => {
     setIsClient(true)
@@ -188,10 +205,25 @@ export default function AIInterviewPage() {
       enableCam: true,
       enableMic: true,
       callbacks: {
-        onBotConnected: () => console.log('🤖 Бот подключился'),
-        onBotDisconnected: () => console.log('🤖 Бот отключился'),
+        onBotConnected: () => {
+          console.log('🤖 Бот подключился')
+          setIsConnected(true)
+          setStatus('AI бот: ПОДКЛЮЧЕНО')
+          setIsTimerRunning(true)
+        },
+        onBotDisconnected: () => {
+          console.log('🤖 Бот отключился')
+          setIsConnected(false)
+          setStatus('AI бот: Отключено')
+          setIsTimerRunning(false)
+        },
         onBotReady: () => console.log('🤖 Бот готов к работе'),
-        onError: (error: unknown) => console.error('❌ Ошибка Pipecat:', error),
+        onError: (error: unknown) => {
+          console.error('❌ Ошибка Pipecat:', error)
+          setIsConnected(false)
+          setStatus('AI бот: Ошибка подключения')
+          setIsTimerRunning(false)
+        },
         onTrackStarted: (track: MediaStreamTrack, participant?: any) => {
           console.log('🎥 Трек запущен:', track.kind, participant)
         },
