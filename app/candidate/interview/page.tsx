@@ -34,8 +34,23 @@ export default function CandidateApplications() {
     fetchApplications()
   }, [])
 
-  const navigateToAIInterview = () => {
-    router.push('/candidate/ai-interview')
+  const navigateToAIInterview = async (application: any) => {
+    try {
+      // Получаем interview_id через API
+      const response = await apiClient.getApplicationInterview(application.id)
+      const interviewId = response.interview_id
+      
+      if (interviewId) {
+        router.push(`/candidate/ai-interview?interview_id=${interviewId}`)
+      } else {
+        // Fallback на старый URL если нет interview_id
+        router.push('/candidate/ai-interview')
+      }
+    } catch (error) {
+      console.error('Ошибка получения interview_id:', error)
+      // Fallback на старый URL при ошибке
+      router.push('/candidate/ai-interview')
+    }
   }
 
   const openVacancyDetails = (vacancy: any) => {
@@ -229,7 +244,7 @@ export default function CandidateApplications() {
                   <div className="flex items-center gap-2 ml-4">
                     {application.status === 'interview_scheduled' && (
                       <button 
-                        onClick={navigateToAIInterview}
+                        onClick={() => navigateToAIInterview(application)}
                         className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                       >
                         ПРОЙТИ ИНТЕРВЬЮ
