@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mic, MicOff, Video as VideoIcon, VideoOff as VideoOffIcon, Settings, MessageSquare } from 'lucide-react'
 import { PipecatClient } from '@pipecat-ai/client-js'
-import { SmallWebRTCTransport } from '@pipecat-ai/small-webrtc-transport'
+import { DailyTransport } from '@pipecat-ai/daily-transport'
 import { PipecatClientProvider, usePipecatClient, PipecatClientVideo, PipecatClientAudio, PipecatClientMicToggle, PipecatClientCamToggle } from '@pipecat-ai/client-react'
 
 export const dynamic = 'force-dynamic'
@@ -41,7 +41,8 @@ function AIInterviewPageInternal() {
       setStatus('AI бот: Подключение...')
       const base = PIPECAT_BACKEND_URL.replace(/\/$/, '')
       const webrtcUrl = interviewId ? `${base}/${encodeURIComponent(interviewId)}` : base
-      await client.connect({ webrtcUrl })
+      await (client as any).startBotAndConnect({ 
+        endpoint: webrtcUrl })
       setIsConnected(true)
       setStatus('AI бот: Активен')
     } catch (e) {
@@ -175,7 +176,7 @@ export default function AIInterviewPage() {
   const client = useMemo(() => {
     if (typeof window === 'undefined') return null as unknown as PipecatClient
     return new PipecatClient({
-      transport: new SmallWebRTCTransport(),
+      transport: new DailyTransport(),
       enableCam: true,
       enableMic: true,
       callbacks: {
