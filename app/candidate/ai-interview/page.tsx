@@ -11,7 +11,7 @@ import { PipecatClientProvider, usePipecatClient, PipecatClientVideo, PipecatCli
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+const API_BASE_URL = process.env.NEXT_PUBLIC_AVATAR_BASE_URL || ''
 const PIPECAT_BACKEND_URL = `${API_BASE_URL.replace(/\/$/, '')}/avatar/interview`
 
 function AIInterviewPageInternal() {
