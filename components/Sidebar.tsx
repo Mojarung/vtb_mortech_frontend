@@ -44,7 +44,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
     { icon: BarChart3, label: t('dashboard'), href: '/candidate/dashboard' },
     { icon: Package, label: 'Вакансии', href: '/candidate/vacancies' },
     { icon: Calendar, label: t('my_interviews'), href: '/candidate/interview' },
-    { icon: FileText, label: t('my_applications'), href: '/candidate/applications' },
+    // { icon: FileText, label: t('my_applications'), href: '/candidate/applications' },
     { icon: Users, label: t('profile'), href: '/candidate/profile' },
     { icon: Settings, label: t('settings'), href: '/candidate/settings' },
   ]
