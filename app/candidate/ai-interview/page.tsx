@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
-const PIPECAT_BACKEND_URL = `${API_BASE_URL.replace(/\/$/, '')}/avatar/interview`
+const PIPECAT_BACKEND_URL = `${API_BASE_URL.replace(/\/$/, '')}/interview`
 
 function AIInterviewPageInternal({ 
   externalBotConnected, 
