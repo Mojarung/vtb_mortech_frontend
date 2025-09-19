@@ -13,6 +13,8 @@ export default function HRInterviews() {
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [openSummaries, setOpenSummaries] = useState<Set<number>>(new Set())
+  const [openDialogues, setOpenDialogues] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -101,6 +103,24 @@ export default function HRInterviews() {
       return `${words[0][0]}${words[1][0]}`.toUpperCase()
     }
     return name.substring(0, 2).toUpperCase()
+  }
+
+  const toggleSummary = (id: number) => {
+    setOpenSummaries(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleDialogue = (id: number) => {
+    setOpenDialogues(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
   return (
@@ -242,15 +262,20 @@ export default function HRInterviews() {
                           </button>
                         )}
                         {interview.status === 'completed' && (
-                          <button 
-                            onClick={() => {
-                              // TODO: Реализовать просмотр отчета
-                              console.log('Viewing report for interview:', interview.id)
-                            }}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-                          >
-                            Отчет
-                          </button>
+                          <>
+                            <button 
+                              onClick={() => toggleSummary(interview.id)}
+                              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                            >
+                              {openSummaries.has(interview.id) ? 'Скрыть отчёт' : 'Показать отчёт'}
+                            </button>
+                            <button 
+                              onClick={() => toggleDialogue(interview.id)}
+                              className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors text-sm"
+                            >
+                              {openDialogues.has(interview.id) ? 'Скрыть диалог' : 'Показать диалог'}
+                            </button>
+                          </>
                         )}
                         <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                           <MessageSquare size={16} />
@@ -258,6 +283,22 @@ export default function HRInterviews() {
                       </div>
                     </div>
                   </div>
+                  {(openSummaries.has(interview.id) && interview.summary) && (
+                    <div className="mt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Отчёт</h4>
+                      <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                        {interview.summary}
+                      </div>
+                    </div>
+                  )}
+                  {(openDialogues.has(interview.id) && interview.dialogue) && (
+                    <div className="mt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Диалог (JSON)</h4>
+                      <pre className="overflow-x-auto text-sm text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+{JSON.stringify(interview.dialogue, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                 </motion.div>
               ))
             )}
