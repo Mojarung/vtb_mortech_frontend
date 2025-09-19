@@ -20,7 +20,7 @@ const translations: Translations = {
   'logout': { ru: 'Выйти', en: 'Logout' },
   
   // Candidate menu
-  'my_interviews': { ru: 'Мои интервью', en: 'My Interviews' },
+  'my_interviews': { ru: 'Мои заявки', en: 'My Interviews' },
   'my_applications': { ru: 'Мои заявки', en: 'My Applications' },
   'profile': { ru: 'Профиль', en: 'Profile' },
   

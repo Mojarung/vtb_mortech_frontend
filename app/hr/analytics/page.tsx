@@ -1,53 +1,31 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Users, Award, Clock, Target } from 'lucide-react'
+import { Users, Award, Clock, Target } from 'lucide-react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
+import { useEffect, useState } from 'react'
+import { apiClient } from '../../../lib/api'
 
 export default function HRAnalytics() {
-  const metrics = [
-    {
-      title: 'Конверсия найма',
-      value: '34.2%',
-      change: '+5.2%',
-      changeType: 'up',
-      icon: Target,
-      color: 'text-green-500'
-    },
-    {
-      title: 'Среднее время найма',
-      value: '18 дней',
-      change: '-3 дня',
-      changeType: 'up',
-      icon: Clock,
-      color: 'text-blue-500'
-    },
-    {
-      title: 'Качество кандидатов',
-      value: '87%',
-      change: '+2.1%',
-      changeType: 'up',
-      icon: Award,
-      color: 'text-purple-500'
-    },
-    {
-      title: 'Активные вакансии',
-      value: '42',
-      change: '+7',
-      changeType: 'up',
-      icon: Users,
-      color: 'text-orange-500'
-    }
-  ]
+  const [stats, setStats] = useState<any>({ totalCandidates: 0, totalInterviews: 0, successfulHires: 0, pending: 0 })
+  const [interviews, setInterviews] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const departmentStats = [
-    { department: 'IT', candidates: 156, hired: 23, conversion: '14.7%' },
-    { department: 'Маркетинг', candidates: 89, hired: 12, conversion: '13.5%' },
-    { department: 'Продажи', candidates: 134, hired: 18, conversion: '13.4%' },
-    { department: 'HR', candidates: 67, hired: 8, conversion: '11.9%' },
-    { department: 'Финансы', candidates: 45, hired: 5, conversion: '11.1%' }
-  ]
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true)
+        const s = await apiClient.getHRStats().catch(() => ({ totalCandidates: 0, totalInterviews: 0, successfulHires: 0, pending: 0 }))
+        const it = await apiClient.getHRInterviews().catch(() => [])
+        setStats(s)
+        setInterviews(Array.isArray(it) ? it : [])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
@@ -69,7 +47,10 @@ export default function HRAnalytics() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {metrics.map((metric, index) => (
+          {[{title:'Всего кандидатов', value:String(stats.totalCandidates||0), icon: Users, color:'text-blue-500'},
+            {title:'Всего интервью', value:String(stats.totalInterviews||0), icon: Target, color:'text-green-500'},
+            {title:'Успешных найма', value:String(stats.successfulHires||0), icon: Award, color:'text-purple-500'},
+            {title:'Ожидающих', value:String(stats.pending||0), icon: Clock, color:'text-orange-500'}].map((metric, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -79,19 +60,10 @@ export default function HRAnalytics() {
             >
               <div className="flex items-center justify-between mb-4">
                 <metric.icon className={`${metric.color}`} size={32} />
-                <div className={`flex items-center text-sm font-medium ${
-                  metric.changeType === 'up' ? 'text-green-500' : 'text-red-500'
-                }`}>
-                  {metric.changeType === 'up' ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  {metric.change}
-                </div>
+                <div className="text-sm text-gray-400">&nbsp;</div>
               </div>
-              <h3 className="text-gray-600 dark:text-gray-400 text-sm mb-1">
-                {metric.title}
-              </h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {metric.value}
-              </p>
+              <h3 className="text-gray-600 dark:text-gray-400 text-sm mb-1">{metric.title}</h3>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{metric.value}</p>
             </motion.div>
           ))}
         </div>
@@ -103,63 +75,33 @@ export default function HRAnalytics() {
             transition={{ delay: 0.4 }}
             className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700"
           >
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-              Воронка найма
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Последние интервью</h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <span className="text-gray-700 dark:text-gray-300">Заявки</span>
-                <span className="font-bold text-gray-900 dark:text-white">1,247</span>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <span className="text-gray-700 dark:text-gray-300">Скрининг</span>
-                <span className="font-bold text-gray-900 dark:text-white">623</span>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <span className="text-gray-700 dark:text-gray-300">Интервью</span>
-                <span className="font-bold text-gray-900 dark:text-white">234</span>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <span className="text-gray-700 dark:text-gray-300">Оффер</span>
-                <span className="font-bold text-gray-900 dark:text-white">89</span>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-primary-purple bg-opacity-10 rounded-lg">
-                <span className="text-gray-700 dark:text-gray-300">Принято</span>
-                <span className="font-bold text-gray-900 dark:text-white">67</span>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700"
-          >
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-              Статистика по отделам
-            </h2>
-            <div className="space-y-4">
-              {departmentStats.map((dept, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">
-                      {dept.department}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {dept.candidates} кандидатов
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-900 dark:text-white">
-                      {dept.hired} нанято
-                    </p>
-                    <p className="text-sm text-green-500">
-                      {dept.conversion}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">Загрузка...</div>
+              ) : interviews.length > 0 ? (
+                interviews.map((it) => {
+                  const name = it.candidate || it.candidate_name || 'Кандидат'
+                  const dateIso = it.date || it.scheduled_date || it.created_at
+                  const dateStr = dateIso ? new Date(dateIso).toLocaleDateString('ru-RU') : '—'
+                  const position = it.position || it.vacancy?.title || 'Неизвестная позиция'
+                  const score = it.score ?? it.pass_percentage ?? '—'
+                  return (
+                    <div key={it.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{name}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{position}</p>
+                        </div>
+                        <div className="text-right text-sm text-gray-500 dark:text-gray-400">{dateStr}</div>
+                      </div>
+                      <div className="mt-2 text-sm text-gray-700 dark:text-gray-300">Оценка: {score}</div>
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="text-gray-500">Нет интервью</div>
+              )}
             </div>
           </motion.div>
         </div>

@@ -13,6 +13,8 @@ export default function HRInterviews() {
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [openSummaries, setOpenSummaries] = useState<Set<number>>(new Set())
+  const [openDialogues, setOpenDialogues] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -101,6 +103,44 @@ export default function HRInterviews() {
       return `${words[0][0]}${words[1][0]}`.toUpperCase()
     }
     return name.substring(0, 2).toUpperCase()
+  }
+
+  const toggleSummary = (id: number) => {
+    setOpenSummaries(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleDialogue = (id: number) => {
+    setOpenDialogues(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  type DialogueMessage = {
+    timestamp?: string
+    role?: 'assistant' | 'user' | string
+    content?: string
+  }
+
+  const parseDialogueMessages = (dialogue: any): DialogueMessage[] => {
+    if (!dialogue) return []
+    if (Array.isArray(dialogue)) return dialogue as DialogueMessage[]
+    if (Array.isArray(dialogue?.dialogue)) return dialogue.dialogue as DialogueMessage[]
+    return []
+  }
+
+  const formatTimestamp = (ts?: string) => {
+    if (!ts) return ''
+    const date = new Date(ts)
+    if (isNaN(date.getTime())) return ''
+    return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
   }
 
   return (
@@ -241,16 +281,25 @@ export default function HRInterviews() {
                             Начать
                           </button>
                         )}
-                        {interview.status === 'completed' && (
-                          <button 
-                            onClick={() => {
-                              // TODO: Реализовать просмотр отчета
-                              console.log('Viewing report for interview:', interview.id)
-                            }}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-                          >
-                            Отчет
-                          </button>
+                        {(interview.summary || interview.dialogue) && (
+                          <>
+                            {interview.summary && (
+                              <button 
+                                onClick={() => toggleSummary(interview.id)}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                              >
+                                {openSummaries.has(interview.id) ? 'Скрыть отчёт' : 'Показать отчёт'}
+                              </button>
+                            )}
+                            {interview.dialogue && (
+                              <button 
+                                onClick={() => toggleDialogue(interview.id)}
+                                className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors text-sm"
+                              >
+                                {openDialogues.has(interview.id) ? 'Скрыть диалог' : 'Показать диалог'}
+                              </button>
+                            )}
+                          </>
                         )}
                         <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                           <MessageSquare size={16} />
@@ -258,6 +307,43 @@ export default function HRInterviews() {
                       </div>
                     </div>
                   </div>
+                  {(openSummaries.has(interview.id) && interview.summary) && (
+                    <div className="mt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Отчёт</h4>
+                      <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                        {interview.summary}
+                      </div>
+                    </div>
+                  )}
+                  {(openDialogues.has(interview.id) && interview.dialogue) && (
+                    <div className="mt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Диалог</h4>
+                      <div className="max-w-full overflow-x-auto">
+                        <div className="max-h-96 overflow-y-auto pr-2">
+                          <div className="space-y-3">
+                            {parseDialogueMessages(interview.dialogue).map((msg, idx) => {
+                              const isUser = msg.role === 'user'
+                              const isAssistant = msg.role === 'assistant'
+                              return (
+                                <div key={idx} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                                  <div className={`max-w-[80%] rounded-2xl px-4 py-2 border text-sm whitespace-pre-wrap ${
+                                    isUser
+                                      ? 'bg-primary-purple text-white border-transparent'
+                                      : 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700'
+                                  }`}>
+                                    {msg.content || ''}
+                                    <div className={`mt-1 text-[11px] ${isUser ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>
+                                      {formatTimestamp(msg.timestamp)}
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
               ))
             )}

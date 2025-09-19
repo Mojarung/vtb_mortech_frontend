@@ -13,6 +13,8 @@ export default function CandidateApplications() {
   const [filter, setFilter] = useState('all')
   const [applications, setApplications] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedVacancy, setSelectedVacancy] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -32,8 +34,33 @@ export default function CandidateApplications() {
     fetchApplications()
   }, [])
 
-  const navigateToAIInterview = () => {
-    router.push('/candidate/ai-interview')
+  const navigateToAIInterview = async (application: any) => {
+    try {
+      // Получаем interview_id через API
+      const response = await apiClient.getApplicationInterview(application.id)
+      const interviewId = response.interview_id
+      
+      if (interviewId) {
+        router.push(`/candidate/ai-interview?interview_id=${interviewId}`)
+      } else {
+        // Fallback на старый URL если нет interview_id
+        router.push('/candidate/ai-interview')
+      }
+    } catch (error) {
+      console.error('Ошибка получения interview_id:', error)
+      // Fallback на старый URL при ошибке
+      router.push('/candidate/ai-interview')
+    }
+  }
+
+  const openVacancyDetails = (vacancy: any) => {
+    setSelectedVacancy(vacancy)
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedVacancy(null)
   }
 
   const getStatusText = (status: string) => {
@@ -97,20 +124,9 @@ export default function CandidateApplications() {
             <div className="absolute -top-24 -right-24 w-72 h-72 bg-violet-600 opacity-30 blur-3xl rounded-full"></div>
             <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-600 opacity-30 blur-3xl rounded-full"></div>
             <div className="relative px-5 sm:px-8 py-8 sm:py-10">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Мои заявки</h1>
-                  <p className="mt-1 text-violet-100/90">Отслеживайте статусы и двигайтесь дальше</p>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={navigateToAIInterview}
-                  className="hidden sm:flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20"
-                >
-                  <Video size={20} />
-                  AI HR Интервью
-                </motion.button>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Мои заявки</h1>
+                <p className="mt-1 text-violet-100/90">Отслеживайте статусы и двигайтесь дальше</p>
               </div>
             </div>
           </div>
@@ -192,16 +208,19 @@ export default function CandidateApplications() {
                           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                             {application.vacancy?.title || 'Неизвестная позиция'}
                           </h3>
-                          <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}>
-                            {getStatusText(application.status)}
-                          </span>
                         </div>
                         <p className="text-lg text-gray-600 dark:text-gray-400 mb-3">
                           {application.vacancy?.creator?.full_name || application.vacancy?.creator?.username || 'Неизвестная компания'}
                         </p>
-                        <p className="text-gray-700 dark:text-gray-300 mb-4">
+                        <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3">
                           {application.vacancy?.description || 'Описание не указано'}
                         </p>
+                        <button 
+                          onClick={() => openVacancyDetails(application.vacancy)}
+                          className="text-primary-purple hover:underline text-sm mb-4 block"
+                        >
+                          Подробнее
+                        </button>
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-500">
                           <div className="flex items-center gap-1">
                             <Calendar size={16} />
@@ -223,12 +242,14 @@ export default function CandidateApplications() {
                   </div>
                   
                   <div className="flex items-center gap-2 ml-4">
-                    <button className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
-                      <Eye size={20} />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition">
-                      <MessageSquare size={20} />
-                    </button>
+                    {application.status === 'interview_scheduled' && (
+                      <button 
+                        onClick={() => navigateToAIInterview(application)}
+                        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                      >
+                        ПРОЙТИ ИНТЕРВЬЮ
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -261,6 +282,74 @@ export default function CandidateApplications() {
           )}
         </div>
       </div>
+
+      {/* Модальное окно с подробной информацией о вакансии */}
+      {isModalOpen && selectedVacancy && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {selectedVacancy.title}
+              </h2>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Компания</h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {selectedVacancy.creator?.full_name || selectedVacancy.creator?.username || 'Неизвестная компания'}
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Описание</h3>
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                  {selectedVacancy.description || 'Описание не указано'}
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap gap-4">
+                <div>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Местоположение</h4>
+                  <p className="text-gray-600 dark:text-gray-400">{selectedVacancy.location || 'Не указано'}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Зарплата</h4>
+                  <p className="text-green-600 dark:text-green-400">
+                    {selectedVacancy.salary_from && selectedVacancy.salary_to 
+                      ? `${selectedVacancy.salary_from.toLocaleString()} - ${selectedVacancy.salary_to.toLocaleString()} ₽`
+                      : 'Не указана'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={closeModal}
+                className="px-6 py-2 bg-primary-purple text-white rounded-lg hover:bg-opacity-90 transition"
+              >
+                Закрыть
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

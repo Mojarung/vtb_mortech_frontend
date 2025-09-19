@@ -270,6 +270,10 @@ class ApiClient {
     return this.request<any>('/analytics/candidate/recent-interviews');
   }
 
+  async getCandidateApplications(): Promise<any> {
+    return this.request<any>('/applications/my-applications');
+  }
+
   async getHRStats(): Promise<any> {
     return this.request<any>('/analytics/hr/stats');
   }
@@ -371,6 +375,10 @@ class ApiClient {
 
   async getApplication(id: number): Promise<any> {
     return this.request<any>(`/applications/${id}`);
+  }
+
+  async getApplicationInterview(resumeId: number): Promise<{interview_id: number}> {
+    return this.request<{interview_id: number}>(`/applications/interview/${resumeId}`);
   }
 
   // Вспомогательный метод: абсолютная ссылка на скачивание резюме

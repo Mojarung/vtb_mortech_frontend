@@ -32,3 +32,34 @@ body {
 .font-positivus {
   font-family: 'Positivus', 'Space Grotesk', sans-serif;
 }
+
+/* Auth background: soft dark gradient with animated radial highlights */
+.auth-bg {
+  background: radial-gradient(1200px 800px at 10% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
+              radial-gradient(800px 600px at 90% 10%, rgba(124, 58, 237, 0.22), transparent 60%),
+              radial-gradient(1000px 700px at 50% 120%, rgba(255, 255, 255, 0.06), transparent 60%),
+              linear-gradient(180deg, #0b0d13 0%, #0f1220 100%);
+}
+
+.auth-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px;
+  mask-image: radial-gradient(circle at 50% 40%, black 0%, transparent 60%);
+}
+
+.glass-card {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+/* Animated soft blobs */
+.auth-blob {
+  position: absolute;
+  filter: blur(40px);
+  opacity: 0.65;
+  will-change: transform;
+}

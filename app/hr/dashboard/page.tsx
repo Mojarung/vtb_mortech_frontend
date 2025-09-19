@@ -1,12 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Users, Package, TrendingUp, Clock, Plus, UserPlus, FileText } from 'lucide-react'
+import { Users, Package, TrendingUp, Clock, Plus } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
 import { ProtectedRoute } from '../../../components/ProtectedRoute'
 import { apiClient } from '../../../lib/api'
+import Link from 'next/link'
 import { useAuth } from '../../../contexts/AuthContext'
 
 export default function HRDashboard() {
@@ -116,12 +117,9 @@ export default function HRDashboard() {
                 <p className="mt-1 text-violet-100/90">Живой обзор найма, интервью и кандидатов</p>
               </div>
               <div className="hidden sm:flex items-center gap-2">
-                <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white backdrop-blur-md">
+                <Link href="/hr/vacancies?create=1" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white backdrop-blur-md">
                   <Plus size={16} /> Новая вакансия
-                </button>
-                <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-900 hover:bg-gray-100">
-                  <UserPlus size={16} /> Добавить кандидата
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -216,11 +214,17 @@ export default function HRDashboard() {
                 </div>
               ) : (interviews?.length || 0) > 0 ? (
                 interviews.slice(0, 5).map((interview: any) => {
-                  const candidate = interview.candidate_name || (interview.candidate ? `${interview.candidate.first_name} ${interview.candidate.last_name}` : 'Кандидат')
+                  const nameFromString = interview.candidate || interview.candidate_name
+                  const nameFromObject = interview.candidate?.first_name && interview.candidate?.last_name
+                    ? `${interview.candidate.first_name} ${interview.candidate.last_name}`
+                    : undefined
+                  const candidate = nameFromString || nameFromObject || 'Кандидат'
                   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(candidate)}`
-                  const date = new Date(interview.scheduled_date || interview.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-                  const score = interview.pass_percentage || Math.floor(Math.random() * 40) + 60
-                  const statusText = interview.status === 'completed' ? 'Завершено' : (interview.status === 'scheduled' ? 'Запланировано' : 'Ожидает')
+                  const dateIso = interview.date || interview.scheduled_date || interview.created_at
+                  const date = dateIso ? new Date(dateIso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'
+                  const score = interview.pass_percentage ?? interview.score ?? '—'
+                  const statusMap: Record<string, string> = { completed: 'Завершено', in_progress: 'В процессе', not_started: 'Ожидает' }
+                  const statusText = statusMap[interview.status] || 'Ожидает'
                   const position = interview.position || interview.vacancy?.title || 'Неизвестная позиция'
                   return (
                     <div key={interview.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
@@ -249,18 +253,7 @@ export default function HRDashboard() {
           </motion.div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-6 sm:mt-8 px-5 sm:px-0 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-          <button className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gray-900 text-white hover:bg-black transition">
-            <FileText size={16} /> Создать вакансию
-          </button>
-          <button className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
-            <UserPlus size={16} /> Добавить кандидата
-          </button>
-          <button className="hidden sm:flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
-            <TrendingUp size={16} /> Отчёт
-          </button>
-        </div>
+        {/* Quick Actions removed as requested */}
 
           </div>
         </div>
