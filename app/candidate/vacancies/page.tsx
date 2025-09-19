@@ -294,19 +294,20 @@ export default function CandidateVacancies() {
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs">
-                    <MapPin className="h-3.5 w-3.5" /> {vacancy.location || 'Локация не указана'}
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-xs">
-                    <DollarSign className="h-3.5 w-3.5" /> {formatSalary(vacancy)}
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-xs">
-                    <Clock className="h-3.5 w-3.5" /> {getExperience(vacancy)}
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 text-xs">
-                    <Users className="h-3.5 w-3.5" /> {getEmployment(vacancy)}
-                  </span>
-                </div>
+  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs">
+    <MapPin className="h-3.5 w-3.5" /> {vacancy.location || 'Локация не указана'}
+  </span>
+  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-xs">
+    <span className="h-3.5 w-3.5">₽</span> {formatSalary(vacancy)}
+  </span>
+  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-xs">
+    <Clock className="h-3.5 w-3.5" /> {getExperience(vacancy)}
+  </span>
+  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 text-xs">
+    <Users className="h-3.5 w-3.5" /> {getEmployment(vacancy)}
+  </span>
+</div>
+
 
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-3 whitespace-pre-line">
                   {vacancy.description}

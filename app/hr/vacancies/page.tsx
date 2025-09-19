@@ -593,8 +593,8 @@ export default function HRVacancies() {
                     <MapPin className="h-3.5 w-3.5" /> {vacancy.location || 'Локация не указана'}
                   </span>
                   <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-xs">
-                    <DollarSign className="h-3.5 w-3.5" /> {formatSalary(vacancy)}
-                  </span>
+    <span className="h-3.5 w-3.5">₽</span> {formatSalary(vacancy)}
+  </span>
                   <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-xs">
                     <Clock className="h-3.5 w-3.5" /> {getExperience(vacancy)}
                   </span>

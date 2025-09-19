@@ -316,7 +316,7 @@ export default function CandidateProfile() {
                   {isEditing && (
                     <>
                       <div className="flex items-center gap-3">
-                        <DollarSign className="text-gray-400" size={20} />
+                      <span className="text-gray-400 text-[20px]">₽</span>
                         <input
                           type="number"
                           value={profile.desired_salary || ''}
