@@ -63,8 +63,7 @@ function AIInterviewPageInternal({
       setStatus('AI бот: Подключение...')
       const base = PIPECAT_BACKEND_URL.replace(/\/$/, '')
       const webrtcUrl = interviewId ? `${base}/${encodeURIComponent(interviewId)}` : base
-      await (client as any).startBotAndConnect({ 
-        endpoint: webrtcUrl })
+      await (client as any).connect(webrtcUrl)
       setIsConnected(true)
       setStatus('AI бот: Подключение...')
     } catch (e) {
