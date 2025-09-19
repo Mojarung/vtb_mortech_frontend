@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mic, MicOff, Video as VideoIcon, VideoOff as VideoOffIcon, Settings, MessageSquare } from 'lucide-react'
 import { PipecatClient } from '@pipecat-ai/client-js'
+// @ts-ignore - типы не доступны для daily-transport
 import { DailyTransport } from '@pipecat-ai/daily-transport'
 import { PipecatClientProvider, usePipecatClient, PipecatClientVideo, PipecatClientAudio, PipecatClientMicToggle, PipecatClientCamToggle } from '@pipecat-ai/client-react'
 
@@ -173,8 +174,14 @@ function AIInterviewPageInternal() {
 }
 
 export default function AIInterviewPage() {
+  const [isClient, setIsClient] = useState(false)
+  
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   const client = useMemo(() => {
-    if (typeof window === 'undefined') return null as unknown as PipecatClient
+    if (!isClient || typeof window === 'undefined') return null as unknown as PipecatClient
     return new PipecatClient({
       transport: new DailyTransport(),
       enableCam: true,
@@ -189,9 +196,18 @@ export default function AIInterviewPage() {
         },
       },
     })
-  }, [])
+  }, [isClient])
 
-  if (!client) return null
+  if (!isClient || !client) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Загрузка интервью...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <PipecatClientProvider client={client}>
