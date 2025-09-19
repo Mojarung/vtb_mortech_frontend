@@ -24,8 +24,8 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           <div className="flex-shrink-0">
             <div className="flex items-center">
-              <div className="w-10 h-10 mr-2 bg-black rounded-lg flex items-center justify-center">
-                <img src="/favicon.svg" alt="AI HR Logo" className="w-8 h-8 object-contain brightness-0 invert"/>
+              <div className="w-10 h-10 mr-2 bg-white rounded-lg flex items-center justify-center">
+                <img src="/favicon.svg" alt="AI HR Logo" className="w-8 h-8 object-contain"/>
               </div>
               <span className="text-xl font-bold font-positivus">AI HR</span>
             </div>
@@ -35,7 +35,7 @@ export default function Header() {
             {isAuthenticated ? (
               <>
                 <div className="flex items-center space-x-2 text-gray-700">
-                  <User size={16} />
+                  <img src="/favicon.svg" alt="App Icon" className="w-4 h-4" />
                   <span className="text-sm">{user?.full_name || user?.username}</span>
                   <span className="text-xs text-gray-500">({user?.role === 'hr' ? 'HR' : 'Кандидат'})</span>
                 </div>
@@ -76,7 +76,7 @@ export default function Header() {
                 <>
                   <div className="px-4 py-2 text-center text-gray-700 border-b">
                     <div className="flex items-center justify-center space-x-2">
-                      <User size={16} />
+                      <img src="/favicon.svg" alt="App Icon" className="w-4 h-4" />
                       <span className="text-sm">{user?.full_name || user?.username}</span>
                     </div>
                     <span className="text-xs text-gray-500">({user?.role === 'hr' ? 'HR' : 'Кандидат'})</span>

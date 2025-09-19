@@ -35,8 +35,6 @@ export default function Sidebar({ userRole }: SidebarProps) {
     { icon: Briefcase, label: 'Вакансии', href: '/hr/vacancies' },
     { icon: Users, label: t('candidates'), href: '/hr/candidates' },
     { icon: Calendar, label: t('interviews'), href: '/hr/interviews' },
-    { icon: PieChart, label: t('analytics'), href: '/hr/analytics' },
-    { icon: FileText, label: t('reports'), href: '/hr/reports' },
     { icon: Settings, label: t('settings'), href: '/hr/settings' },
   ]
 
@@ -78,8 +76,8 @@ export default function Sidebar({ userRole }: SidebarProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 h-16 bg-gradient-to-r from-gray-800 to-gray-700 dark:from-gray-900 dark:to-gray-800 border-b border-gray-600 dark:border-gray-700">
           <div className={`flex items-center gap-3 ${isCollapsed ? 'lg:justify-center' : ''}`}>
-            <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-sm">AI</span>
+            <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+              <img src="/favicon.svg" alt="AI HR Logo" className="w-6 h-6 object-contain"/>
             </div>
             {!isCollapsed && (
               <span className="text-xl font-bold text-white">AI HR</span>
