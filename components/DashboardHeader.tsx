@@ -99,51 +99,6 @@ export default function DashboardHeader({ title, userRole }: DashboardHeaderProp
             {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
           </button>
 
-          {/* Language selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-              className="flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <Globe size={20} />
-              <span className="text-sm font-medium uppercase">{language}</span>
-              <ChevronDown size={16} />
-            </button>
-
-            <AnimatePresence>
-              {showLanguageMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
-                >
-                  <button
-                    onClick={() => handleLanguageChange('ru')}
-                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                      language === 'ru' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span>🇷🇺</span>
-                      <span>Русский</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => handleLanguageChange('en')}
-                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                      language === 'en' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span>🇺🇸</span>
-                      <span>English</span>
-                    </div>
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
 
           {/* Notifications */}
           <div className="relative">
