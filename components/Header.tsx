@@ -85,7 +85,6 @@ export default function Header() {
                     className="w-full flex items-center justify-center space-x-2 border border-red-500 text-red-500 px-6 py-2 rounded-xl hover:bg-red-500 hover:text-white transition-all duration-300"
                   >
                     <LogOut size={16} />
-                    <span>Выйти</span>
                   </button>
                 </>
               ) : (
