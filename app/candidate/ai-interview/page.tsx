@@ -123,12 +123,6 @@ function AIInterviewPageInternal({
             <span className="text-sm text-gray-300">{isBotConnected ? 'ПОДКЛЮЧЕНО' : status}</span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-300">{currentTime}</div>
-          <button className="p-2 text-gray-400 hover:text-white transition-colors">
-            <MessageSquare size={20} />
-          </button>
-        </div>
       </div>
 
       <div className="flex h-[calc(100vh-64px)]">
