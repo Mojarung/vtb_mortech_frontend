@@ -34,7 +34,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
     { icon: Briefcase, label: 'Вакансии', href: '/hr/vacancies' },
     { icon: Users, label: t('candidates'), href: '/hr/candidates' },
     { icon: Calendar, label: t('interviews'), href: '/hr/interviews' },
-    { icon: Settings, label: t('settings'), href: '/hr/settings' },
+    // { icon: Settings, label: t('settings'), href: '/hr/settings' },
   ]
 
   const candidateMenuItems = [
@@ -43,7 +43,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
     { icon: Calendar, label: t('my_interviews'), href: '/candidate/interview' },
     // { icon: FileText, label: t('my_applications'), href: '/candidate/applications' },
     { icon: Users, label: t('profile'), href: '/candidate/profile' },
-    { icon: Settings, label: t('settings'), href: '/candidate/settings' },
+    // { icon: Settings, label: t('settings'), href: '/candidate/settings' },
   ]
 
   const menuItems = userRole === 'hr' ? hrMenuItems : candidateMenuItems
