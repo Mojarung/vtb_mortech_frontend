@@ -457,6 +457,31 @@ class ApiClient {
       method: 'POST',
     });
   }
+
+  // Методы для выбора лучшего кандидата
+  async getVacanciesWithCompletedInterviews(): Promise<any[]> {
+    return this.request<any[]>('/candidate-selection/vacancies');
+  }
+
+  async selectBestCandidates(vacancyId: number): Promise<{
+    vacancy_id: number;
+    vacancy_title: string;
+    total_candidates: number;
+    ranked_candidates: Array<{
+      candidate_id: number;
+      candidate_name: string;
+      resume_id: number;
+      interview_id: number;
+      ranking_score: number;
+      reasoning: string;
+      interview_summary?: string;
+      resume_status?: string;
+    }>;
+  }> {
+    return this.request<any>(`/candidate-selection/select-best/${vacancyId}`, {
+      method: 'POST',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

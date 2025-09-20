@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Users, Eye, Download, Filter, FileText } from 'lucide-react'
+import { Users, Eye, Download, Filter, FileText, Trophy, Search } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
@@ -20,6 +20,13 @@ export default function HRInterviews() {
   const [statusFilter, setStatusFilter] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [generatingOffer, setGeneratingOffer] = useState<number | null>(null)
+  
+  // Состояние для выбора лучшего кандидата
+  const [showCandidateSelection, setShowCandidateSelection] = useState(false)
+  const [availableVacancies, setAvailableVacancies] = useState<any[]>([])
+  const [selectedVacancyForSelection, setSelectedVacancyForSelection] = useState('')
+  const [candidateRankings, setCandidateRankings] = useState<any>(null)
+  const [loadingCandidates, setLoadingCandidates] = useState(false)
 
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -183,11 +190,63 @@ export default function HRInterviews() {
       )
       setInterviews(updatedInterviews)
       
+      // Обновляем список кандидатов в модальном окне, если оно открыто
+      if (candidateRankings) {
+        const updatedCandidates = candidateRankings.ranked_candidates.map((candidate: any) => 
+          candidate.interview_id === interviewId 
+            ? { ...candidate, resume_status: 'accepted' }
+            : candidate
+        )
+        setCandidateRankings({
+          ...candidateRankings,
+          ranked_candidates: updatedCandidates
+        })
+      }
+      
     } catch (error) {
       console.error('Ошибка при генерации оффера:', error)
       alert('Ошибка при генерации оффера. Попробуйте еще раз.')
     } finally {
       setGeneratingOffer(null)
+    }
+  }
+
+  const openCandidateSelection = async () => {
+    try {
+      setLoadingCandidates(true)
+      const vacancies = await apiClient.getVacanciesWithCompletedInterviews()
+      setAvailableVacancies(vacancies)
+      setShowCandidateSelection(true)
+    } catch (error) {
+      console.error('Ошибка при загрузке вакансий:', error)
+      alert('Ошибка при загрузке вакансий. Попробуйте еще раз.')
+    } finally {
+      setLoadingCandidates(false)
+    }
+  }
+
+  const closeCandidateSelection = () => {
+    setShowCandidateSelection(false)
+    setSelectedVacancyForSelection('')
+    setCandidateRankings(null)
+  }
+
+  const findBestCandidates = async () => {
+    if (!selectedVacancyForSelection) {
+      alert('Пожалуйста, выберите вакансию')
+      return
+    }
+
+    try {
+      setLoadingCandidates(true)
+      const vacancyId = parseInt(selectedVacancyForSelection)
+      const rankings = await apiClient.selectBestCandidates(vacancyId)
+      setCandidateRankings(rankings)
+    } catch (error) {
+      console.error('Ошибка при выборе лучших кандидатов:', error)
+      alert('Ошибка при выборе лучших кандидатов. Попробуйте еще раз.')
+    } finally {
+      setLoadingCandidates(false)
     }
   }
 
@@ -232,6 +291,23 @@ export default function HRInterviews() {
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Интервью</h1>
                 <p className="mt-1 text-violet-100/90">Управление расписанием интервью и их проведение</p>
               </div>
+              <button
+                onClick={openCandidateSelection}
+                disabled={loadingCandidates}
+                className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                {loadingCandidates ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Загрузка...
+                  </>
+                ) : (
+                  <>
+                    <Trophy size={20} className="group-hover:scale-110 transition-transform duration-300" />
+                    Выбрать лучшего кандидата
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -558,6 +634,189 @@ export default function HRInterviews() {
             </div>
             <div className="p-5 border-t border-gray-200 dark:border-gray-700 flex justify-end">
               <button onClick={closeModal} className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm">Закрыть</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Модальное окно для выбора лучшего кандидата */}
+      {showCandidateSelection && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Выбор лучшего кандидата</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  ИИ проанализирует кандидатов и отсортирует их по релевантности
+                </p>
+              </div>
+              <button 
+                onClick={closeCandidateSelection} 
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[75vh]">
+              {!candidateRankings ? (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                      Выберите вакансию для анализа
+                    </label>
+                    <select 
+                      value={selectedVacancyForSelection}
+                      onChange={(e) => setSelectedVacancyForSelection(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    >
+                      <option value="">Выберите вакансию...</option>
+                      {availableVacancies.map(vacancy => (
+                        <option key={vacancy.id} value={vacancy.id}>
+                          {vacancy.title} ({vacancy.completed_interviews_count} завершенных интервью)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      onClick={findBestCandidates}
+                      disabled={!selectedVacancyForSelection || loadingCandidates}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loadingCandidates ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Анализ...
+                        </>
+                      ) : (
+                        <>
+                          <Search size={20} />
+                          Найти лучших кандидатов
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      Результаты анализа для вакансии: {candidateRankings.vacancy_title}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Проанализировано {candidateRankings.total_candidates} кандидатов
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {candidateRankings.ranked_candidates.map((candidate: any, index: number) => (
+                      <motion.div
+                        key={candidate.candidate_id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-white dark:bg-gray-700 rounded-xl p-6 border border-gray-200 dark:border-gray-600 shadow-lg hover:shadow-xl transition-all duration-300"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full text-white font-bold text-lg shadow-lg">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <h4 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                {candidate.candidate_name}
+                              </h4>
+                              <div className="flex items-center gap-4 mt-2">
+                                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
+                                  Оценка: {(candidate.ranking_score * 100).toFixed(0)}%
+                                </span>
+                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                  ID: {candidate.candidate_id}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <a
+                              href={apiClient.getResumeDownloadUrlById(candidate.resume_id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-300"
+                            >
+                              <Download size={16} />
+                              Резюме
+                            </a>
+                            
+                            {/* Кнопка отправки оффера */}
+                            {candidate.resume_status === 'accepted' ? (
+                              <div className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-semibold">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Оффер отправлен
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => generateOffer(candidate.interview_id)}
+                                disabled={generatingOffer === candidate.interview_id}
+                                className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-lg hover:from-green-700 hover:to-emerald-800 transition-all duration-300 text-sm font-semibold hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                              >
+                                {generatingOffer === candidate.interview_id ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Генерация...
+                                  </>
+                                ) : (
+                                  <>
+                                    <FileText size={16} className="group-hover:scale-110 transition-transform duration-300" />
+                                    Отправить оффер
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Обоснование выбора:
+                          </h5>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {candidate.reasoning}
+                          </p>
+                        </div>
+                        
+                        {candidate.interview_summary && (
+                          <div className="mt-4">
+                            <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                              Отчет по интервью:
+                            </h5>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 max-h-32 overflow-y-auto">
+                              {candidate.interview_summary}
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={closeCandidateSelection}
+                      className="px-6 py-3 bg-gray-500 text-white rounded-xl font-semibold hover:bg-gray-600 transition-all duration-300"
+                    >
+                      Закрыть
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
