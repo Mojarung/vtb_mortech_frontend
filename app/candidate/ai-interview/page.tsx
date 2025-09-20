@@ -209,7 +209,7 @@ export default function AIInterviewPage() {
         onBotConnected: () => {
           console.log('🤖 Бот подключился')
           setIsConnected(true)
-          setStatus('AI бот: ПОДКЛЮЧЕНО')
+          setStatus('AI бот: П')
           setIsTimerRunning(true)
         },
         onBotDisconnected: () => {
