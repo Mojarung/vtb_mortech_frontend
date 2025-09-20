@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mic, MicOff, Video as VideoIcon, VideoOff as VideoOffIcon, Settings, MessageSquare } from 'lucide-react'
 import { PipecatClient } from '@pipecat-ai/client-js'
@@ -27,6 +27,8 @@ function AIInterviewPageInternal({
   const [status, setStatus] = useState('AI бот: Отключено')
   const [currentTime, setCurrentTime] = useState('00:00')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [showEndModal, setShowEndModal] = useState(false)
+  const hasEverConnectedRef = useRef(false)
   
   // Используем состояние из внешнего компонента
   const isBotConnected = externalBotConnected
@@ -35,6 +37,7 @@ function AIInterviewPageInternal({
   const client = usePipecatClient()
   const searchParams = useSearchParams()
   const interviewId = searchParams.get('interview_id') || ''
+  const router = useRouter()
 
   // Таймер запускается только после подключения AI HR
   useEffect(() => {
@@ -55,6 +58,22 @@ function AIInterviewPageInternal({
     const seconds = (elapsedSeconds % 60).toString().padStart(2, '0')
     setCurrentTime(`${minutes}:${seconds}`)
   }, [elapsedSeconds])
+
+  // Синхронизация статуса через коллбэки (onBotConnected / onBotDisconnected)
+  useEffect(() => {
+    if (isBotConnected) {
+      setStatus('AI бот: Подключено')
+      setIsConnected(true)
+      hasEverConnectedRef.current = true
+    } else {
+      // Не показывать модалку на первом рендере до первой успешной сессии
+      if (hasEverConnectedRef.current) {
+        setStatus('AI бот: Отключено')
+        setIsConnected(false)
+        setShowEndModal(true)
+      }
+    }
+  }, [isBotConnected])
 
   const handleConnect = useCallback(async () => {
     if (!client || isConnecting || isConnected) return
@@ -185,10 +204,10 @@ function AIInterviewPageInternal({
             </button>
           ) : (
             <button
-              onClick={handleDisconnect}
-              className="px-6 py-3 rounded-full font-medium transition-colors bg-red-500 hover:bg-red-600 text-white"
+              disabled
+              className="px-6 py-3 rounded-full font-medium transition-colors bg-green-600 text-white cursor-default"
             >
-              Завершить
+              Подключено
             </button>
           )}
         </motion.div>
@@ -196,6 +215,24 @@ function AIInterviewPageInternal({
 
       {/* Аудио бота */}
       <PipecatClientAudio />
+
+      {/* Модальное окно завершения собеседования */}
+      {showEndModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-md w-full mx-4 text-white">
+            <h2 className="text-xl font-semibold mb-2">Собеседование завершено</h2>
+            <p className="text-gray-300 mb-6">Спасибо за прохождение собеседования! Мы свяжемся с вами в ближайшее время.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => router.push('/candidate/dashboard')}
+                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors"
+              >
+                На дашборд
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
