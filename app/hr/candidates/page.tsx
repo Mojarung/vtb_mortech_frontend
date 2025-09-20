@@ -447,8 +447,13 @@ export default function HRCandidates() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {candidate.position}
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                      <div 
+                        className="max-w-xs truncate" 
+                        title={candidate.position}
+                      >
+                        {candidate.position}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {candidate.date}
