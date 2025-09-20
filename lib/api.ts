@@ -450,6 +450,13 @@ class ApiClient {
       body: JSON.stringify(data),
     });
   }
+
+  // Методы для офферов
+  async generateOffer(interviewId: number): Promise<{ pdf_data: string; filename: string }> {
+    return this.request<{ pdf_data: string; filename: string }>(`/offers/generate/${interviewId}`, {
+      method: 'POST',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

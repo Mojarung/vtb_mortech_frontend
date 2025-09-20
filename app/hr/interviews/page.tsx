@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Users, Eye, Download, Filter } from 'lucide-react'
+import { Users, Eye, Download, Filter, FileText } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Sidebar from '../../../components/Sidebar'
 import DashboardHeader from '../../../components/DashboardHeader'
@@ -19,6 +19,7 @@ export default function HRInterviews() {
   const [selectedVacancyFilter, setSelectedVacancyFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [generatingOffer, setGeneratingOffer] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -152,6 +153,42 @@ export default function HRInterviews() {
   const closeModal = () => {
     setShowDetailsModal(false)
     setSelectedVacancy(null)
+  }
+
+  const generateOffer = async (interviewId: number) => {
+    try {
+      setGeneratingOffer(interviewId)
+      const response = await apiClient.generateOffer(interviewId)
+      
+      // Создаем blob из base64 данных
+      const pdfBlob = new Blob([Uint8Array.from(atob(response.pdf_data), c => c.charCodeAt(0))], {
+        type: 'application/pdf'
+      })
+      
+      // Создаем ссылку для скачивания
+      const url = window.URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = response.filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      // Обновляем список интервью
+      const updatedInterviews = interviews.map(interview => 
+        interview.id === interviewId 
+          ? { ...interview, resume: { ...interview.resume, status: 'accepted' } }
+          : interview
+      )
+      setInterviews(updatedInterviews)
+      
+    } catch (error) {
+      console.error('Ошибка при генерации оффера:', error)
+      alert('Ошибка при генерации оффера. Попробуйте еще раз.')
+    } finally {
+      setGeneratingOffer(null)
+    }
   }
 
 
@@ -364,9 +401,9 @@ export default function HRInterviews() {
                     </div>
                   </div>
                   
-                  {/* Кнопки отчета и диалога */}
+                  {/* Кнопки отчета, диалога и оффера */}
                   {(interview.summary || interview.dialogue) && (
-                    <div className="mt-4 flex items-center gap-3">
+                    <div className="mt-4 flex items-center gap-3 flex-wrap">
                       {interview.summary && (
                         <button 
                           onClick={() => toggleSummary(interview.id)}
@@ -388,6 +425,33 @@ export default function HRInterviews() {
                           </svg>
                           {openDialogues.has(interview.id) ? 'Скрыть диалог' : 'Показать диалог'}
                         </button>
+                      )}
+                      {interview.summary && interview.resume?.status !== 'accepted' && (
+                        <button 
+                          onClick={() => generateOffer(interview.id)}
+                          disabled={generatingOffer === interview.id}
+                          className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-lg hover:from-green-700 hover:to-emerald-800 transition-all duration-300 text-sm font-semibold hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        >
+                          {generatingOffer === interview.id ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Генерация...
+                            </>
+                          ) : (
+                            <>
+                              <FileText size={16} className="group-hover:scale-110 transition-transform duration-300" />
+                              Отправить оффер
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {interview.resume?.status === 'accepted' && (
+                        <div className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-semibold">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Оффер отправлен
+                        </div>
                       )}
                     </div>
                   )}
