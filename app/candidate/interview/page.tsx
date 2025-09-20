@@ -241,7 +241,10 @@ export default function CandidateApplications() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex flex-col items-end gap-3 ml-4">
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}>
+                      {getStatusText(application.status)}
+                    </span>
                     {application.status === 'interview_scheduled' && (
                       <button 
                         onClick={() => navigateToAIInterview(application)}
@@ -257,7 +260,25 @@ export default function CandidateApplications() {
             )}
           </div>
 
-          {filteredApplications.length === 0 && (
+          {!loading && applications.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12 px-5 sm:px-0"
+            >
+              <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Building className="text-gray-400" size={32} />
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+                Нет заявок
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                У вас пока нет заявок
+              </p>
+            </motion.div>
+          )}
+
+          {!loading && applications.length > 0 && filteredApplications.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
